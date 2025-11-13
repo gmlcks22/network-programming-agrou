@@ -12,11 +12,14 @@ public class MainFrame extends JFrame {
     // 2. 각 화면의 "이름"을 상수로 정의 (실수 방지)
     public static final String LOGIN_PANEL = "LoginPanel";
     public static final String LOBBY_PANEL = "LobbyPanel";
+    public static final String CREATE_GAME_PANEL = "CreateGamePanel";
+    public static final String ENTER_GAME_PANEL = "EnterGamePanel";
     public static final String GAME_PANEL = "GamePanel";
 
     public MainFrame() {
         setTitle("Wolf Mafia");
         setSize(800, 500);
+        setResizable(false);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLocationRelativeTo(null); // 화면 중앙에
 
