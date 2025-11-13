@@ -3,9 +3,6 @@ import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
-/**
- * CardLayout을 사용한 기본 화면 전환 예제
- */
 public class MainFrame extends JFrame {
 
     // 1. CardLayout과 카드를 담을 메인 패널 선언

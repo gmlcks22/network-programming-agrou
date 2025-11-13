@@ -40,7 +40,6 @@ public class GameRoom {
         // 나갔다는 사실을 방에 "남아있는" 사람들에게 알림
         broadcastMessage("[System] '" + handler.getNickname() + "' 님이 방을 나갔습니다.");
     }
-
     // 4. (가장 중요) 메시지 전파 (Broadcasting)
     //    ClientHandler가 채팅을 치면 이 메소드가 호출됨
     public void broadcastMessage(String message) {
