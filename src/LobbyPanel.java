@@ -5,7 +5,7 @@ import java.awt.event.ActionListener;
 
 public class LobbyPanel extends JPanel {
 
-    // 2. 화면 전환에 필요한 부모(mainPanel)와 CardLayout을 받아옴
+    // 화면 전환에 필요한 부모(mainPanel)와 CardLayout을 받아옴
     private JPanel mainPanel;
     private CardLayout cardLayout;
 
@@ -21,7 +21,7 @@ public class LobbyPanel extends JPanel {
             @Override
             public void actionPerformed(ActionEvent e) {
                 // "GAME_PANEL" 이름의 카드를 보여줌
-                // (실제로는 '게임대기' 화면으로 가야겠죠)
+                // todo 게임 대기 화면으로
                 System.out.println("게임 화면으로 전환");
                 cardLayout.show(mainPanel, MainFrame.GAME_PANEL);
             }
