@@ -1,7 +1,7 @@
+package client;
+
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 
 public class MainFrame extends JFrame {
 
@@ -10,11 +10,11 @@ public class MainFrame extends JFrame {
     private JPanel mainPanel; // 모든 "화면" (카드)을 담을 패널
 
     // 각 화면의 이름을 상수로 정의
-    public static final String LOGIN_PANEL = "LoginPanel";
-    public static final String LOBBY_PANEL = "LobbyPanel";
-    public static final String CREATE_GAME_PANEL = "CreateGamePanel";
-    public static final String ENTER_GAME_PANEL = "EnterGamePanel";
-    public static final String GAME_PANEL = "GamePanel";
+    public static final String LOGIN_PANEL = "client.LoginPanel";
+    public static final String LOBBY_PANEL = "client.LobbyPanel";
+    public static final String CREATE_GAME_PANEL = "client.CreateGamePanel";
+    public static final String ENTER_GAME_PANEL = "client.EnterGamePanel";
+    public static final String GAME_PANEL = "client.GamePanel";
 
     public MainFrame() {
         setTitle("Wolf Mafia");

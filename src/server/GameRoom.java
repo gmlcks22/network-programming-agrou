@@ -1,11 +1,11 @@
-// GameRoom.java
+package server;// server.GameRoom.java
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 public class GameRoom {
     private String roomName;
 
-    // 1. (핵심) 이 방에 속한 ClientHandler(클라이언트)들의 목록
+    // 1. (핵심) 이 방에 속한 server.ClientHandler(클라이언트)들의 목록
     private List<ClientHandler> clientsInRoom;
 
     public GameRoom(String roomName) {
@@ -45,7 +45,7 @@ public class GameRoom {
     public void broadcastMessage(String message) {
         System.out.println("'" + roomName + "' 방에 메시지 전파: " + message);
 
-        // 5. 이 방(GameRoom)에 속한 "모든" ClientHandler들에게...
+        // 5. 이 방(server.GameRoom)에 속한 "모든" ClientHandler들에게...
         for (ClientHandler client : clientsInRoom) {
             // 6. 각 ClientHandler가 맡은 클라이언트에게 메시지를 보내라고 명령
             client.sendMessage(message);

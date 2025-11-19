@@ -1,4 +1,4 @@
-// Lobby.java
+package server;// server.Lobby.java
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
