@@ -6,7 +6,10 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.FocusEvent;
 import java.awt.event.FocusListener;
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.PrintWriter;
 import java.net.Socket;
 
 public class LoginPanel extends JPanel {
@@ -127,10 +130,26 @@ public class LoginPanel extends JPanel {
         try {
             int port = Integer.parseInt(portStr);
             Socket socket = new Socket(ip, port);
-
-            System.out.println("[Client] 서버 접속 성공");
-            mainFrame.setSocket(socket, nickname);  // 성공 시 MainFrame에 소켓 맡김
-            mainFrame.changePanel(MainFrame.LOBBY_PANEL);   // 로비 패널로 이동
+            
+            // 소켓 연결 직후 스트림을 열어 통신 시작
+            BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+            PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
+            
+            // 서버로 닉네임 전송
+            out.println(nickname);
+            
+            // 서버 응답 대기("OK" or "FAIL")
+            String response = in.readLine();
+            
+            if ("OK".equals(response)) {
+                System.out.println("[Client] 서버 접속 성공");
+                mainFrame.setSocket(socket, nickname);  // 성공 시 MainFrame에 소켓 맡김
+                mainFrame.changePanel(MainFrame.LOBBY_PANEL);   // 로비 패널로 이동
+            }else {
+                JOptionPane.showMessageDialog(this, "이미 사용 중인 닉네임입니다.");
+                socket.close(); // 실패했으니 소켓 닫기
+            }
+            
         } catch (NumberFormatException e) {
             JOptionPane.showMessageDialog(this, "포트 번호는 숫자여야 합니다.", "오류", JOptionPane.WARNING_MESSAGE);
         } catch (IOException e) {
