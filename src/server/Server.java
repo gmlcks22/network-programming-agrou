@@ -18,7 +18,7 @@ public class Server {
                 // 2. 클라이언트 접속 대기
                 Socket clientSocket = serverSocket.accept();
 
-                // 3. 새 클라이언트마다 'server.ClientHandler' 스레드 생성 및 시작
+                // 3. 새 클라이언트마다 server.ClientHandler 스레드 생성 및 시작
                 ClientHandler clientHandler = new ClientHandler(clientSocket);
                 new Thread(clientHandler).start();
             }

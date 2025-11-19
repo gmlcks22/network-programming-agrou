@@ -8,17 +8,15 @@ import java.awt.event.ActionListener;
 public class LobbyPanel extends JPanel {
 
     // 1. 화면 전환에 필요한 부모(mainPanel)와 CardLayout을 받아옴
-    private JPanel mainPanel;
-    private CardLayout cardLayout;
+    private MainFrame mainPanel;
 
     // 2. GUI 컴포넌트 선언
     private JButton createRoomButton;
     private JButton findRoomButton;
     private JButton settingsButton;
 
-    public LobbyPanel(JPanel mainPanel, CardLayout cardLayout) {
+    public LobbyPanel(MainFrame mainFrame) {
         this.mainPanel = mainPanel;
-        this.cardLayout = cardLayout;
 
         // 3. 기본 설정 (백그라운드, 전체 레이아웃)
         this.setBackground(Color.WHITE);

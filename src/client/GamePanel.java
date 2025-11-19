@@ -9,8 +9,7 @@ import java.awt.event.ActionListener;
 public class GamePanel extends JPanel {
 
     // 1. 화면 전환용
-    private JPanel mainPanel;
-    private CardLayout cardLayout;
+    private MainFrame mainPanel;
 
     // 2. UI 컴포넌트
     private JLabel populationLabel; // 인원수 표시 레이블
@@ -19,9 +18,8 @@ public class GamePanel extends JPanel {
     // (중요) 오른쪽에 "선택한 역할"을 표시할 패널
     private JPanel selectedRolesListPanel;
 
-    public GamePanel(JPanel mainPanel, CardLayout cardLayout) {
+    public GamePanel(MainFrame mainPanel) {
         this.mainPanel = mainPanel;
-        this.cardLayout = cardLayout;
 
         this.setBackground(Color.WHITE);
         this.setLayout(new BorderLayout(20, 20)); // 전체 레이아웃

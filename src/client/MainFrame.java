@@ -2,12 +2,16 @@ package client;
 
 import javax.swing.*;
 import java.awt.*;
+import java.net.Socket;
 
 public class MainFrame extends JFrame {
 
     // CardLayout과 카드를 담을 메인 패널 선언
     private CardLayout cardLayout;
     private JPanel mainPanel; // 모든 "화면" (카드)을 담을 패널
+
+    private Socket socket;  // 모든 패널이 공유해야 할 소켓
+    private String nickname;
 
     // 각 화면의 이름을 상수로 정의
     public static final String LOGIN_PANEL = "client.LoginPanel";
@@ -27,21 +31,48 @@ public class MainFrame extends JFrame {
         cardLayout = new CardLayout();
         mainPanel = new JPanel(cardLayout);
 
-        // 각 화면(JPanel) 생성
-        JPanel loginPanel = new LoginPanel(mainPanel, cardLayout);
-        JPanel lobbyPanel = new LobbyPanel(mainPanel, cardLayout);
-        JPanel gamePanel = new GamePanel(mainPanel, cardLayout);
+        // 각 화면(JPanel) 생성, MainFrame을 넘기도록 수정. 서버와의 통신을 위함
+        JPanel loginPanel = new LoginPanel(this);
+        JPanel lobbyPanel = new LobbyPanel(this);
+        JPanel createGamePanel = new CreateGamePanel(this);
+        JPanel enterGamePanel = new EnterGamePanel(this);
+        JPanel gamePanel = new GamePanel(this);
 
         // mainPanel에 각 화면을 "이름"과 함께 추가
         mainPanel.add(loginPanel, LOGIN_PANEL);
         mainPanel.add(lobbyPanel, LOBBY_PANEL);
+        mainPanel.add(createGamePanel, CREATE_GAME_PANEL);
+        mainPanel.add(lobbyPanel, ENTER_GAME_PANEL);
         mainPanel.add(gamePanel, GAME_PANEL);
 
         // 프레임에 mainPanel 추가
         add(mainPanel);
+        cardLayout.show(mainPanel, LOGIN_PANEL);    // 처음 보여줄 화면 설정
+    }
 
-        // 처음 보여줄 화면 설정
-        cardLayout.show(mainPanel, LOGIN_PANEL);
+    // 1. 화면 전환 메소드(자식들이 호출해 사용)
+    public void changePanel(String panelName) {
+        cardLayout.show(mainPanel, panelName);
+    }
+
+    // 2. 소켓 저장 메소드 (LoginPanel이 성공 시 호출)
+    public void setSocket(Socket socket, String nickname) {
+        this.socket = socket;
+        this.nickname = nickname;
+    }
+
+    // 3. 소켓, 닉네임 가져오기
+    public Socket getSocket() {
+        return this.socket;
+    }
+    public String getNickname() {
+        return this.nickname;
+    }
+
+    // 접속 성공 시 로비로(by LoginPanel)
+    public void connectSuccess(Socket socket, String nickname) {
+        System.out.println("접속 유저: " + nickname);
+        cardLayout.show(mainPanel, LOBBY_PANEL);
     }
 
     public static void main(String[] args) {

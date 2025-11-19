@@ -2,6 +2,7 @@ package server;// server.ClientHandler.java
 import java.io.*;
 import java.net.Socket;
 
+// 서버 내부에 상주하는 유저(클라이언트)
 public class ClientHandler implements Runnable {
 
     private Socket socket;
@@ -9,7 +10,7 @@ public class ClientHandler implements Runnable {
     private PrintWriter out;    // 클라이언트에게 메시지 송신
 
     private String nickname;
-    private GameRoom currentRoom = null; // (중요) 내가 현재 속한 방
+    private GameRoom currentRoom = null; // 내가 현재 속한 방
 
     public ClientHandler(Socket socket) {
         try {

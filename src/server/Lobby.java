@@ -2,8 +2,9 @@ package server;// server.Lobby.java
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
-// (참고: CopyOnWriteArrayList는 여러 스레드가 리스트를 읽고 수정할 때 
-// 충돌을 방지(Thread-safe)하기 위해 사용합니다.)
+// CopyOnWriteArrayList는 여러 스레드가 리스트를 읽고 수정할 때
+// 충돌을 방지(Thread-safe)하기 위해 사용.
+// 게임방 장부 관리자
 public class Lobby {
 
     private List<GameRoom> gameRooms;
