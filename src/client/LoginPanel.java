@@ -99,10 +99,7 @@ public class LoginPanel extends JPanel {
         loginButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                // (임시) 버튼 누르면 무조건 로비로 이동
-                System.out.println("로그인 버튼 클릭 (화면 전환만)");
                 tryConnect();
-                mainFrame.changePanel(MainFrame.LOBBY_PANEL);   // MainFrame에게 화면 전환 요청
             }
         });
     }
@@ -110,7 +107,7 @@ public class LoginPanel extends JPanel {
     // 서버 연결 로직
     private void tryConnect() {
         String ip = ipField.getText().trim();
-        String port = portField.getText().trim();
+        String portStr = portField.getText().trim();
         String nickname = nicknameField.getText().trim();
 
         // 입력값 검증
@@ -118,11 +115,21 @@ public class LoginPanel extends JPanel {
             JOptionPane.showMessageDialog(this, "닉네임을 입력해주세요.", "경고", JOptionPane.WARNING_MESSAGE);
             return;
         }
+        if (ip.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "서버 IP를 입력해주세요.", "경고", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+        if (portStr.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "포트 번호를 입력해주세요.", "경고", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
 
         try {
-            Socket socket = new Socket(ip, Integer.parseInt(port));
-            mainFrame.setSocket(socket, nickname);  // 성공 시 MainFrame에 소켓 맡김
+            int port = Integer.parseInt(portStr);
+            Socket socket = new Socket(ip, port);
+
             System.out.println("[Client] 서버 접속 성공");
+            mainFrame.setSocket(socket, nickname);  // 성공 시 MainFrame에 소켓 맡김
             mainFrame.changePanel(MainFrame.LOBBY_PANEL);   // 로비 패널로 이동
         } catch (NumberFormatException e) {
             JOptionPane.showMessageDialog(this, "포트 번호는 숫자여야 합니다.", "오류", JOptionPane.WARNING_MESSAGE);
