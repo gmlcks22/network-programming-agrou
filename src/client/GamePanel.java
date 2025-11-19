@@ -5,72 +5,72 @@ import javax.swing.border.TitledBorder;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.File;
 
 public class GamePanel extends JPanel {
 
-    // 1. 화면 전환용
+    //  화면 전환용 변수
     private JPanel mainPanel;
     private CardLayout cardLayout;
 
-    // 2. UI 컴포넌트
+    //  UI 컴포넌트 변수
     private JLabel populationLabel; // 인원수 표시 레이블
     private int currentPopulation = 4; // 현재 인원수
-    
-    // (중요) 오른쪽에 "선택한 역할"을 표시할 패널
-    private JPanel selectedRolesListPanel;
+    private JPanel selectedRolesListPanel; // 역할이 쌓일 패널
 
     public GamePanel(JPanel mainPanel, CardLayout cardLayout) {
         this.mainPanel = mainPanel;
         this.cardLayout = cardLayout;
 
+        // 패널 기본 설정
         this.setBackground(Color.WHITE);
-        this.setLayout(new BorderLayout(20, 20)); // 전체 레이아웃
-        // 화면 전체 여백
-        this.setBorder(BorderFactory.createEmptyBorder(50, 50, 50, 50));
+        this.setLayout(new BorderLayout(20, 20));
+        this.setBorder(BorderFactory.createEmptyBorder(30, 30, 30, 30)); // 여백 설정
 
-        // 3. (NORTH) - 전체 타이틀
+        //  상단 타이틀
         JLabel titleLabel = new JLabel("게임 생성하기");
-        titleLabel.setFont(new Font("SansSerif", Font.BOLD, 30));
+        titleLabel.setFont(new Font("맑은 고딕", Font.BOLD, 30));
         titleLabel.setHorizontalAlignment(SwingConstants.CENTER);
         this.add(titleLabel, BorderLayout.NORTH);
 
-        // 4. (CENTER) - 메인 컨텐츠 (왼쪽, 중앙, 오른쪽)
-        JPanel mainContentPanel = new JPanel(new BorderLayout(30, 20)); // 컴포넌트 사이 간격
+        // 메인 컨텐츠 패널 (좌, 중, 우 포함)
+        JPanel mainContentPanel = new JPanel(new BorderLayout(20, 20));
         mainContentPanel.setBackground(Color.WHITE);
         this.add(mainContentPanel, BorderLayout.CENTER);
 
-        // --- 4-1. (WEST) 왼쪽 정보 패널 (방번호, 인원수) ---
+
+        //  왼쪽 설정 패널 (방번호, 인원수) ---
         JPanel leftPanel = new JPanel();
-        leftPanel.setLayout(new BoxLayout(leftPanel, BoxLayout.Y_AXIS)); // Y축으로 쌓기
+        leftPanel.setLayout(new BoxLayout(leftPanel, BoxLayout.Y_AXIS));
         leftPanel.setBackground(Color.WHITE);
 
         // 방 번호
         JPanel roomPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
         roomPanel.setBackground(Color.WHITE);
         JLabel roomLabel = new JLabel("방 번호");
-        roomLabel.setFont(new Font("SansSerif", Font.BOLD, 14));
+        roomLabel.setFont(new Font("맑은 고딕", Font.BOLD, 14));
         
-        JTextField roomField = new JTextField("10394813"); // 이미지의 텍스트
+        JTextField roomField = new JTextField("10394813");
         roomField.setEditable(false);
         roomField.setBackground(new Color(240, 240, 240));
         roomField.setPreferredSize(new Dimension(100, 30));
         
         roomPanel.add(roomLabel);
-        roomPanel.add(Box.createRigidArea(new Dimension(10, 0))); // 간격
+        roomPanel.add(Box.createRigidArea(new Dimension(10, 0)));
         roomPanel.add(roomField);
-        
-        // 인원수
+
+        // 인원수 조절
         JPanel popPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
         popPanel.setBackground(Color.WHITE);
         JLabel popLabelTitle = new JLabel("인원수");
-        popLabelTitle.setFont(new Font("SansSerif", Font.BOLD, 14));
+        popLabelTitle.setFont(new Font("맑은 고딕", Font.BOLD, 14));
         
         JButton minusButton = new JButton("-");
         JButton plusButton = new JButton("+");
-        populationLabel = new JLabel(currentPopulation + "명"); // "4명"
-        populationLabel.setFont(new Font("SansSerif", Font.BOLD, 14));
+        populationLabel = new JLabel(currentPopulation + "명");
+        populationLabel.setFont(new Font("맑은 고딕", Font.BOLD, 14));
         
-        Dimension buttonSize = new Dimension(45, 30); // 버튼 크기
+        Dimension buttonSize = new Dimension(45, 30);
         minusButton.setPreferredSize(buttonSize);
         plusButton.setPreferredSize(buttonSize);
         
@@ -81,131 +81,149 @@ public class GamePanel extends JPanel {
         popPanel.add(populationLabel);
         popPanel.add(Box.createRigidArea(new Dimension(5, 0)));
         popPanel.add(plusButton);
-        
-        // 왼쪽 패널에 추가
+
+        // 왼쪽 패널에 조립
         leftPanel.add(roomPanel);
         leftPanel.add(popPanel);
-        leftPanel.add(Box.createVerticalGlue()); // 컴포넌트들을 위로 정렬
-
+        leftPanel.add(Box.createVerticalGlue());
         mainContentPanel.add(leftPanel, BorderLayout.WEST);
 
-        // --- 4-2. (CENTER) 중앙 역할 선택 그리드 ---
-        // "역할 선택" 부제 타이틀이 있는 보더 추가
+
+        // 중앙 역할 선택 그리드 ---
         JPanel roleGridWrapper = new JPanel(new BorderLayout());
         roleGridWrapper.setBackground(Color.WHITE);
         roleGridWrapper.setBorder(BorderFactory.createTitledBorder(
                 BorderFactory.createEtchedBorder(), "역할 선택",
                 TitledBorder.CENTER, TitledBorder.TOP,
-                new Font("SansSerif", Font.BOLD, 16)
+                new Font("맑은 고딕", Font.BOLD, 16)
         ));
 
-        // 요청하신 5개 역할 (임시 버튼으로)
-        // (나중에는 이미지를 넣은 JButton 등으로 교체)
-        JPanel roleGridPanel = new JPanel(new GridLayout(2, 3, 10, 10)); // 2행 3열
+        // 5열 그리드
+        JPanel roleGridPanel = new JPanel(new GridLayout(0, 5, 5, 5));
         roleGridPanel.setBackground(Color.WHITE);
-        roleGridPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10)); // 내부 여백
+        roleGridPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
 
-        String[] roleNames = {"마피아", "시민", "경찰", "의사", "기타 역할"};
-        
-        for (String roleName : roleNames) {
-            JButton roleButton = new JButton(roleName); // (임시) 텍스트 버튼
-            roleButton.setBackground(new Color(220, 220, 220));
-            roleButton.setPreferredSize(new Dimension(100, 100)); // 정사각형
-            roleButton.setFont(new Font("SansSerif", Font.BOLD, 14));
+        // 역할 데이터
+        String[] roleNames = {"경비병", "늑대인간", "독재자", "마녀", "사냥꾼", "선견자", "시민", "천사", "큐피드"};
+        String[] roleImages = {"경비병.png", "늑대인간.png", "독재자.png", "마녀.png", "사냥꾼.png", "선견자.png", "시민.png", "천사.png", "큐피드.png"};
+
+        for (int i = 0; i < roleNames.length; i++) {
+            String roleName = roleNames[i];
+            String fileName = roleImages[i];
+
+            String path1 = "src/resources/images/" + fileName;
             
-            // (기능) 역할 버튼 클릭 리스너
+            File imgFile = new File(path1);
+
+            JButton roleButton;
+            
+            if (imgFile.exists()) {
+                ImageIcon originalIcon = new ImageIcon(imgFile.getAbsolutePath());
+                Image img = originalIcon.getImage();
+                Image newImg = img.getScaledInstance(55, 85, Image.SCALE_SMOOTH);
+                roleButton = new JButton(new ImageIcon(newImg));
+            } else {
+                System.err.println("이미지 못찾음: " + fileName);
+                roleButton = new JButton(roleName);
+            }
+
+
+            roleButton.setPreferredSize(new Dimension(65, 95));
+            roleButton.setBackground(Color.WHITE);
+            roleButton.setMargin(new Insets(0, 0, 0, 0));
+            roleButton.setBorderPainted(false);
+
             roleButton.addActionListener(new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent e) {
-                    System.out.println(roleName + " 역할 클릭");
-                    // (임시) 클릭하면 오른쪽에 추가 (중복 체크 X)
                     addRoleToSelectedList(roleName);
                 }
             });
             roleGridPanel.add(roleButton);
         }
-        
+
         roleGridWrapper.add(roleGridPanel, BorderLayout.CENTER);
         mainContentPanel.add(roleGridWrapper, BorderLayout.CENTER);
 
-        // --- 4-3. (EAST) 오른쪽 선택한 역할 패널 ---
+
+        // 오른쪽 선택한 역할 패널---
         JPanel rightPanel = new JPanel(new BorderLayout());
         rightPanel.setBackground(Color.WHITE);
         rightPanel.setBorder(BorderFactory.createTitledBorder(
                 BorderFactory.createEtchedBorder(), "선택한 역할",
                 TitledBorder.LEFT, TitledBorder.TOP,
-                new Font("SansSerif", Font.BOLD, 16)
+                new Font("맑은 고딕", Font.BOLD, 16)
         ));
-        
-        // 실제 역할 목록이 들어갈 패널
+
+        // 역할 목록이 들어갈 내부 패널
         selectedRolesListPanel = new JPanel();
         selectedRolesListPanel.setLayout(new BoxLayout(selectedRolesListPanel, BoxLayout.Y_AXIS));
         selectedRolesListPanel.setBackground(Color.WHITE);
-        selectedRolesListPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10)); // 내부 여백
-        
-        rightPanel.add(selectedRolesListPanel, BorderLayout.NORTH); // 북쪽에 붙여서 쌓음
-        rightPanel.setPreferredSize(new Dimension(150, 0)); // 너비 고정
+        selectedRolesListPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+
+        JScrollPane scrollPane = new JScrollPane(selectedRolesListPanel);
+        scrollPane.setBorder(null); 
+        scrollPane.getViewport().setBackground(Color.WHITE);
+
+        scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
+        scrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
+
+        rightPanel.add(scrollPane, BorderLayout.CENTER);
+        rightPanel.setPreferredSize(new Dimension(160, 0));
         mainContentPanel.add(rightPanel, BorderLayout.EAST);
 
-        // 5. (SOUTH) - 하단 확인 버튼
+
+        // 하단 버튼
         JPanel bottomPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
         bottomPanel.setBackground(Color.WHITE);
-        
+
         JButton confirmButton = new JButton("확인");
         confirmButton.setBackground(new Color(220, 220, 220));
         confirmButton.setPreferredSize(new Dimension(100, 40));
-        confirmButton.setFont(new Font("SansSerif", Font.BOLD, 14));
+        confirmButton.setFont(new Font("맑은 고딕", Font.BOLD, 14));
         
         bottomPanel.add(confirmButton);
         this.add(bottomPanel, BorderLayout.SOUTH);
 
-        // --- 6. (기능) 버튼 액션 리스너 구현 ---
-        
+
+        // --- 이벤트 리스너 설정 ---
+
         // 인원수 감소
-        minusButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                if (currentPopulation > 4) { // (임시) 최소 4명
-                    currentPopulation--;
-                    populationLabel.setText(currentPopulation + "명");
-                }
+        minusButton.addActionListener(e -> {
+            if (currentPopulation > 4) {
+                currentPopulation--;
+                populationLabel.setText(currentPopulation + "명");
             }
         });
 
         // 인원수 증가
-        plusButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                if (currentPopulation < 10) { // (임시) 최대 10명
-                    currentPopulation++;
-                    populationLabel.setText(currentPopulation + "명");
-                }
+        plusButton.addActionListener(e -> {
+            if (currentPopulation < 10) {
+                currentPopulation++;
+                populationLabel.setText(currentPopulation + "명");
             }
         });
 
-        // 확인 버튼 (임시 - 로비로 돌아가기)
-        confirmButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                System.out.println("확인 버튼 클릭 (게임 생성 로직 필요)");
-                // (나중에) 실제 게임 생성 로직 + 서버에 방 생성 요청
-                
-                // (임시) 로비로 돌아가기
-                cardLayout.show(mainPanel, MainFrame.LOBBY_PANEL);
-            }
+        // 확인 버튼 -> 로비로 이동
+        confirmButton.addActionListener(e -> {
+            // 여기에 "방 생성 요청" 코드가 들어가야 함
+            // 지금은 단순히 화면 전환만
+            cardLayout.show(mainPanel, "LobbyPanel"); 
         });
     }
 
-    /**
-     * (헬퍼 메소드) "선택한 역할" 목록에 역할을 동적으로 추가
-     */
+    // 오른쪽 패널에 역할 텍스트 추가하는 함수
     private void addRoleToSelectedList(String roleName) {
         JLabel roleLabel = new JLabel(roleName);
-        roleLabel.setFont(new Font("SansSerif", Font.PLAIN, 14));
-        selectedRolesListPanel.add(roleLabel);
-        selectedRolesListPanel.add(Box.createRigidArea(new Dimension(0, 10))); // 역할 사이 간격
+        roleLabel.setFont(new Font("맑은 고딕", Font.PLAIN, 14));
         
-        // (중요) 패널에 UI 컴포넌트가 추가/삭제되면 revalidate/repaint 호출
+        // 라벨을 왼쪽에 정렬
+        roleLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
+        
+        selectedRolesListPanel.add(roleLabel);
+        selectedRolesListPanel.add(Box.createRigidArea(new Dimension(0, 8))); // 간격
+        
+        // 화면 갱신 (아주 중요)
         selectedRolesListPanel.revalidate();
         selectedRolesListPanel.repaint();
     }
