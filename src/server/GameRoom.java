@@ -30,6 +30,7 @@ public class GameRoom {
 
         // 입장했다는 사실을 모두에게 알림
         broadcastMessage("[System] '" + handler.getNickname() + "' 님이 방에 입장했습니다.");
+        broadcastUserList();
     }
 
     // 클라이언트가 이 방에서 나갈 때 호출됨
@@ -39,6 +40,7 @@ public class GameRoom {
 
         // 나갔다는 사실을 방에 "남아있는" 사람들에게 알림
         broadcastMessage("[System] '" + handler.getNickname() + "' 님이 방을 나갔습니다.");
+        broadcastUserList();
     }
     // 메시지 전파 (Broadcasting)
     // ClientHandler가 채팅을 치면 이 메소드가 호출됨
@@ -50,5 +52,18 @@ public class GameRoom {
             // 6. 각 ClientHandler가 맡은 클라이언트에게 메시지를 보내라고 명령
             client.sendMessage(message);
         }
+    }
+    public void broadcastUserList() {
+        StringBuilder list = new StringBuilder("/userlist");
+        for (ClientHandler client : clientsInRoom) {
+            list.append(" ").append(client.getNickname());
+        }
+        
+        String userListMessage = list.toString();
+        // 이 방에 속한 모든 클라이언트에게 목록 전송
+        for (ClientHandler client : clientsInRoom) {
+            client.sendMessage(userListMessage);
+        }
+        System.out.println("[Server] 유저 목록 전파: " + userListMessage);
     }
 }

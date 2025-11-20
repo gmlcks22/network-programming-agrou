@@ -5,7 +5,11 @@ import javax.swing.border.TitledBorder;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.ComponentAdapter;
+import java.awt.event.ComponentEvent;
 import java.io.File;
+import java.io.IOException;
+import java.io.PrintWriter;
 
 public class GamePanel extends JPanel {
 
@@ -16,13 +20,16 @@ public class GamePanel extends JPanel {
     private JLabel populationLabel; // 인원수 표시 레이블
     private int currentPopulation = 4; // 현재 인원수
     private JPanel selectedRolesListPanel; // 역할이 쌓일 패널
+    private JTextField roomField; 
+    
+    // 현재 선택된 역할의 총 인원수
+    private int selectedRoleCount = 0; 
 
-    public GamePanel(MainFrame mainPanel) {
-        this.mainFrame = new MainFrame();
+    public GamePanel(MainFrame mainFrame) {
+        this.mainFrame = mainFrame;
 
         this.setBackground(Color.WHITE);
         this.setLayout(new BorderLayout(20, 20)); // 전체 레이아웃
-        // 화면 전체 여백
         this.setBorder(BorderFactory.createEmptyBorder(50, 50, 50, 50));
 
         // 3. (NORTH) - 전체 타이틀
@@ -48,7 +55,7 @@ public class GamePanel extends JPanel {
         JLabel roomLabel = new JLabel("방 번호");
         roomLabel.setFont(new Font("맑은 고딕", Font.BOLD, 14));
         
-        JTextField roomField = new JTextField("10394813");
+        roomField = new JTextField("10394813");
         roomField.setEditable(false);
         roomField.setBackground(new Color(240, 240, 240));
         roomField.setPreferredSize(new Dimension(100, 30));
@@ -121,10 +128,8 @@ public class GamePanel extends JPanel {
                 Image newImg = img.getScaledInstance(55, 85, Image.SCALE_SMOOTH);
                 roleButton = new JButton(new ImageIcon(newImg));
             } else {
-                System.err.println("이미지 못찾음: " + fileName);
                 roleButton = new JButton(roleName);
             }
-
 
             roleButton.setPreferredSize(new Dimension(65, 95));
             roleButton.setBackground(Color.WHITE);
@@ -134,8 +139,6 @@ public class GamePanel extends JPanel {
             roleButton.addActionListener(new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent e) {
-                    System.out.println(roleName + " 역할 클릭");
-                    // (임시) 클릭하면 오른쪽에 추가 (중복 체크 X)
                     addRoleToSelectedList(roleName);
                 }
             });
@@ -188,7 +191,6 @@ public class GamePanel extends JPanel {
 
         // --- 이벤트 리스너 설정 ---
 
-        // 인원수 감소
         minusButton.addActionListener(e -> {
             if (currentPopulation > 4) {
                 currentPopulation--;
@@ -196,7 +198,6 @@ public class GamePanel extends JPanel {
             }
         });
 
-        // 인원수 증가
         plusButton.addActionListener(e -> {
             if (currentPopulation < 10) {
                 currentPopulation++;
@@ -204,26 +205,94 @@ public class GamePanel extends JPanel {
             }
         });
 
-        // 확인 버튼 -> 로비로 이동
+        // 확인 버튼 -> 서버 통신 및 화면 전환 로직
         confirmButton.addActionListener(e -> {
-            // 여기에 "방 생성 요청" 코드가 들어가야 함
-            // 지금은 단순히 화면 전환만
-            cardLayout.show(mainPanel, "LobbyPanel");
+            
+            // 선택된 역할의 총합과 인원수가 동일한지 검사
+            if (selectedRoleCount != currentPopulation) {
+                JOptionPane.showMessageDialog(this, 
+                    "선택된 역할의 총합(" + selectedRoleCount + "명)이 인원수(" + currentPopulation + "명)와 일치해야 합니다.", 
+                    "인원 불일치", 
+                    JOptionPane.WARNING_MESSAGE);
+                return; // 일치하지 않으면 여기서 중단
+            }
+
+            // 인원수가 일치하면 서버 통신 진행
+            String randomRoomNum = roomField.getText();
+            String roomTitle = randomRoomNum;
+
+            try {
+                if (mainFrame.getSocket() == null) {
+                    JOptionPane.showMessageDialog(this, "서버에 연결되지 않았습니다.");
+                    return;
+                }
+
+                PrintWriter out = new PrintWriter(mainFrame.getSocket().getOutputStream(), true);
+                out.println("/create " + roomTitle);
+                System.out.println("[Client] 방 생성 요청: " + roomTitle);
+
+                mainFrame.changePanel(MainFrame.ENTER_GAME_PANEL);
+
+            } catch (IOException ex) {
+                ex.printStackTrace();
+                JOptionPane.showMessageDialog(this, "통신 오류 발생!");
+            }
         });
+
+        // 이 패널이 화면에 보일 때마다 자동으로 초기화 실행
+        this.addComponentListener(new ComponentAdapter() {
+            @Override
+            public void componentShown(ComponentEvent e) {
+                resetData();
+            }
+        });
+    }
+
+    // 화면 데이터를 처음 상태로 리셋하는 메소드
+    private void resetData() {
+        // 인원수 리셋
+        currentPopulation = 4;
+        populationLabel.setText(currentPopulation + "명");
+        
+        // 역할 수 초기화
+        selectedRoleCount = 0; 
+
+        // 방 번호 새로 랜덤 생성
+        int randomNum = (int)(Math.random() * 10000000) + 1000000; 
+        roomField.setText(String.valueOf(randomNum));
+
+        // 선택된 역할 목록 비우기
+        selectedRolesListPanel.removeAll();
+        selectedRolesListPanel.revalidate();
+        selectedRolesListPanel.repaint();
+
+        System.out.println("[Client] 게임 생성 화면 데이터 리셋 완료");
     }
 
     // 오른쪽 패널에 역할 텍스트 추가하는 함수
     private void addRoleToSelectedList(String roleName) {
+        
+        // 총 인원수를 초과하는지 검사
+        if (selectedRoleCount >= currentPopulation) {
+            JOptionPane.showMessageDialog(this, 
+                "총 인원수(" + currentPopulation + "명)를 초과할 수 없습니다.", 
+                "인원 초과", 
+                JOptionPane.WARNING_MESSAGE);
+            return; // 초과하면 추가하지 않고 종료
+        }
+
+        // 역할 추가 로직
         JLabel roleLabel = new JLabel(roleName);
         roleLabel.setFont(new Font("맑은 고딕", Font.PLAIN, 14));
-
-        // 라벨을 왼쪽에 정렬
         roleLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
 
         selectedRolesListPanel.add(roleLabel);
-        selectedRolesListPanel.add(Box.createRigidArea(new Dimension(0, 8))); // 간격
+        selectedRolesListPanel.add(Box.createRigidArea(new Dimension(0, 8))); 
         
-        // 화면 갱신 (아주 중요)
+        // 역할 수 증가
+        selectedRoleCount++;
+        System.out.println("역할 추가: " + roleName + ", 현재 총 역할 수: " + selectedRoleCount);
+
         selectedRolesListPanel.revalidate();
         selectedRolesListPanel.repaint();
     }

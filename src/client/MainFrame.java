@@ -3,6 +3,8 @@ package client;
 import javax.swing.*;
 import java.awt.*;
 import java.net.Socket;
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
 
 public class MainFrame extends JFrame {
 
@@ -12,6 +14,9 @@ public class MainFrame extends JFrame {
 
     private Socket socket;  // 모든 패널이 공유해야 할 소켓
     private String nickname;
+
+    private LobbyPanel lobbyPanel; // 인스턴스를 필드에 저장
+    private EnterGamePanel enterGamePanel;
 
     // 각 화면의 이름을 상수로 정의
     public static final String LOGIN_PANEL = "client.LoginPanel";
@@ -33,16 +38,16 @@ public class MainFrame extends JFrame {
 
         // 각 화면(JPanel) 생성, MainFrame을 넘기도록 수정. 서버와의 통신을 위함
         JPanel loginPanel = new LoginPanel(this);
-        JPanel lobbyPanel = new LobbyPanel(this);
+        this.lobbyPanel = new LobbyPanel(this);
         JPanel createGamePanel = new CreateGamePanel(this);
-        JPanel enterGamePanel = new EnterGamePanel(this);
+        this.enterGamePanel = new EnterGamePanel(this);
         JPanel gamePanel = new GamePanel(this);
 
         // mainPanel에 각 화면을 "이름"과 함께 추가
         mainPanel.add(loginPanel, LOGIN_PANEL);
         mainPanel.add(lobbyPanel, LOBBY_PANEL);
         mainPanel.add(createGamePanel, CREATE_GAME_PANEL);
-        mainPanel.add(lobbyPanel, ENTER_GAME_PANEL);
+        mainPanel.add(this.enterGamePanel, ENTER_GAME_PANEL);
         mainPanel.add(gamePanel, GAME_PANEL);
 
         // 프레임에 mainPanel 추가
@@ -74,7 +79,23 @@ public class MainFrame extends JFrame {
         System.out.println("접속 유저: " + nickname);
         cardLayout.show(mainPanel, LOBBY_PANEL);
     }
-
+public void handleServerMessage(String message) {
+        // 모든 UI 업데이트는 Swing의 이벤트 디스패치 스레드에서 처리해야 안전함
+        SwingUtilities.invokeLater(() -> {
+            // 1. 유저 목록 업데이트 처리 (/userlist 닉1 닉2 ...)
+            if (message.startsWith("/userlist ")) {
+                String userListString = message.substring(10).trim();
+                // 공백 기준으로 닉네임 분리
+                String[] users = userListString.isEmpty() ? new String[0] : userListString.split(" ");
+                enterGamePanel.updateUserList(users);
+                
+            } 
+            // 2. 채팅 및 시스템 메시지 처리 (나머지는 EnterGamePanel의 채팅창으로 보냄)
+            else {
+                enterGamePanel.appendMessage(message);
+            }
+        });
+    }
     public static void main(String[] args) {
         SwingUtilities.invokeLater(new Runnable() {
             @Override
