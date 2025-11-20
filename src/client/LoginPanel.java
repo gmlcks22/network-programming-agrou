@@ -142,10 +142,10 @@ public class LoginPanel extends JPanel {
             String response = in.readLine();
             
             if ("OK".equals(response)) {
-            // IP, 포트, 닉네임을 함께 출력하도록 변경
-            System.out.println("[Client] 서버 접속 성공! (IP: " + ip + ", Port: " + port + ", User: " + nickname + ")");
-            mainFrame.setSocket(socket, nickname);
-            mainFrame.changePanel(MainFrame.LOBBY_PANEL);
+                // IP, 포트, 닉네임을 함께 출력하도록 변경
+                System.out.println("[Client] 서버 접속 성공! (IP: " + ip + ", Port: " + port + ", User: " + nickname + ")");
+                mainFrame.connectSuccess(socket, nickname);
+                mainFrame.changePanel(MainFrame.LOBBY_PANEL);
             }else {
                 JOptionPane.showMessageDialog(this, "이미 사용 중인 닉네임입니다.");
                 socket.close(); // 실패했으니 소켓 닫기

@@ -2,9 +2,11 @@ package client;
 
 import javax.swing.*;
 import java.awt.*;
+import java.io.IOException;
 import java.net.Socket;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
+import java.nio.Buffer;
 
 public class MainFrame extends JFrame {
 
@@ -60,7 +62,7 @@ public class MainFrame extends JFrame {
         cardLayout.show(mainPanel, panelName);
     }
 
-    // 2. 소켓 저장 메소드 (LoginPanel이 성공 시 호출)
+    // 2. 소켓 저장 메소드
     public void setSocket(Socket socket, String nickname) {
         this.socket = socket;
         this.nickname = nickname;
@@ -74,24 +76,56 @@ public class MainFrame extends JFrame {
         return this.nickname;
     }
 
-    // 접속 성공 시 로비로(by LoginPanel)
+    // 접속 성공 시, 소켓 저장 + 수신 스레드 시작 + 화면 전환
     public void connectSuccess(Socket socket, String nickname) {
         System.out.println("접속 유저: " + nickname);
+
+        try {
+            // 서버로부터 읽어올 스트림 생성
+            BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+
+            // 수신 전담 스레드 생성 및 시작 -> 서버의 말을 듣기 시작
+            ClientReceiver receiver = new ClientReceiver(this, in);
+            new Thread(receiver).start();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        // 로비 화면으로 이동
         cardLayout.show(mainPanel, LOBBY_PANEL);
     }
-public void handleServerMessage(String message) {
+
+    public void handleServerMessage(String message) {
+        System.out.println("[Client] <수신> "+ message);
         // 모든 UI 업데이트는 Swing의 이벤트 디스패치 스레드에서 처리해야 안전함
         SwingUtilities.invokeLater(() -> {
+
+            // === 방 입장/생성 관련 처리 ===
+            if (message.equals("join_ok") || message.equals("create_ok")) {
+                // 방 입장 성공 -> 게임 화면(대기방)으로
+                changePanel(GAME_PANEL);
+            }
+            else if (message.startsWith("join_fail")) {
+                // 방 입장 실패 -> 경고창
+                JOptionPane.showMessageDialog(this, "입장 실패: " + message.substring(11));
+            }
+            // === 대기방 관련 처리 ===
             // 1. 유저 목록 업데이트 처리 (/userlist 닉1 닉2 ...)
-            if (message.startsWith("/userlist ")) {
+            else if (message.startsWith("/userlist ")) {
                 String userListString = message.substring(10).trim();
                 // 공백 기준으로 닉네임 분리
                 String[] users = userListString.isEmpty() ? new String[0] : userListString.split(" ");
                 enterGamePanel.updateUserList(users);
                 
-            } 
-            // 2. 채팅 및 시스템 메시지 처리 (나머지는 EnterGamePanel의 채팅창으로 보냄)
+            }
+            // === 로비 관련 처리 ===
+            // 서버가 "/roomlist 방1, 방2, ..." 형식으로 보낸다고 가정
+            else if (message.startsWith("/roomlist ")) {
+                // todo lobbyPanel.updateRoomList() 호출 구현 필요
+            }
+            // === 채팅 처리 ===
+            // 채팅 및 시스템 메시지 처리 (나머지는 EnterGamePanel의 채팅창으로 보냄)
             else {
+                // todo enterGamePanel 정의. enterGamePanel은 게임 참가 눌렀을 떄 나오는 패널. 대기 방이 아님.
                 enterGamePanel.appendMessage(message);
             }
         });
