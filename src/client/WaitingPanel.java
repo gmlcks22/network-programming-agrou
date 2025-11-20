@@ -6,7 +6,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.Vector;
 
-public class EnterGamePanel extends JPanel {
+public class WaitingPanel extends JPanel {
     private MainFrame mainFrame;
     private JTextArea chatArea; 
     private JTextField chatField; 
@@ -15,7 +15,7 @@ public class EnterGamePanel extends JPanel {
     private JList<String> userList;
     private DefaultListModel<String> userListModel; 
 
-    public EnterGamePanel(MainFrame mainFrame) {
+    public WaitingPanel(MainFrame mainFrame) {
         this.mainFrame = mainFrame;
         setLayout(new BorderLayout());
         setBackground(new Color(240, 240, 255));

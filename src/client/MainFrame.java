@@ -16,7 +16,7 @@ public class MainFrame extends JFrame {
     private String nickname;
 
     private LobbyPanel lobbyPanel; // 인스턴스를 필드에 저장
-    private EnterGamePanel enterGamePanel;
+    private WaitingPanel enterGamePanel;
 
     // 각 화면의 이름을 상수로 정의
     public static final String LOGIN_PANEL = "client.LoginPanel";
@@ -40,7 +40,7 @@ public class MainFrame extends JFrame {
         JPanel loginPanel = new LoginPanel(this);
         this.lobbyPanel = new LobbyPanel(this);
         JPanel createGamePanel = new CreateGamePanel(this);
-        this.enterGamePanel = new EnterGamePanel(this);
+        this.enterGamePanel = new WaitingPanel(this);
         JPanel gamePanel = new GamePanel(this);
 
         // mainPanel에 각 화면을 "이름"과 함께 추가
