@@ -42,7 +42,7 @@ public class MainFrame extends JFrame {
         mainPanel.add(loginPanel, LOGIN_PANEL);
         mainPanel.add(lobbyPanel, LOBBY_PANEL);
         mainPanel.add(createGamePanel, CREATE_GAME_PANEL);
-        mainPanel.add(lobbyPanel, ENTER_GAME_PANEL);
+        mainPanel.add(enterGamePanel, ENTER_GAME_PANEL);
         mainPanel.add(gamePanel, GAME_PANEL);
 
         // 프레임에 mainPanel 추가

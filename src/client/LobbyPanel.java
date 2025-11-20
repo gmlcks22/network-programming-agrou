@@ -4,10 +4,12 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.IOException; 
+import java.io.PrintWriter;
 
 public class LobbyPanel extends JPanel {
 
-    // 1. 화면 전환에 필요한 부모(mainPanel)와 CardLayout을 받아옴
+    // 1. 화면 전환에 필요한 부모(MainFrame)와 CardLayout을 받아옴
     private MainFrame mainPanel;
 
     // 2. GUI 컴포넌트 선언
@@ -16,12 +18,12 @@ public class LobbyPanel extends JPanel {
     private JButton settingsButton;
 
     public LobbyPanel(MainFrame mainFrame) {
-        this.mainPanel = mainPanel;
+
+        this.mainPanel = mainFrame;
 
         // 3. 기본 설정 (백그라운드, 전체 레이아웃)
         this.setBackground(Color.WHITE);
         this.setLayout(new BorderLayout(10, 10)); // 전체 레이아웃 (북, 서)
-        // 화면 전체에 여백
         this.setBorder(BorderFactory.createEmptyBorder(50, 50, 50, 50));
 
         // 4. 타이틀 (North)
@@ -40,37 +42,32 @@ public class LobbyPanel extends JPanel {
         findRoomButton = new JButton("방 찾기");
         settingsButton = new JButton("설정");
 
-        // 7. 버튼 크기 및 스타일 설정 (회색 버튼)
+        // 7. 버튼 크기 및 스타일 설정
         Dimension buttonSize = new Dimension(150, 40);
         Font buttonFont = new Font("SansSerif", Font.BOLD, 14);
 
-        // '게임 생성하기' 버튼
         createRoomButton.setPreferredSize(buttonSize);
-        createRoomButton.setMaximumSize(buttonSize); // BoxLayout을 위해
+        createRoomButton.setMaximumSize(buttonSize);
         createRoomButton.setFont(buttonFont);
         createRoomButton.setBackground(new Color(220, 220, 220));
 
-        // '방 찾기' 버튼
         findRoomButton.setPreferredSize(buttonSize);
         findRoomButton.setMaximumSize(buttonSize);
         findRoomButton.setFont(buttonFont);
         findRoomButton.setBackground(new Color(220, 220, 220));
         
-        // '설정' 버튼
         settingsButton.setPreferredSize(buttonSize);
         settingsButton.setMaximumSize(buttonSize);
         settingsButton.setFont(buttonFont);
         settingsButton.setBackground(new Color(220, 220, 220));
 
         // 8. 버튼 패널에 컴포넌트 추가
-        
-        // (중요) 이 "Glue"가 버튼들을 패널의 아래쪽으로 밀어냅니다.
         buttonPanel.add(Box.createVerticalGlue()); 
 
         buttonPanel.add(createRoomButton);
-        buttonPanel.add(Box.createRigidArea(new Dimension(0, 10))); // 버튼 사이 간격
+        buttonPanel.add(Box.createRigidArea(new Dimension(0, 10)));
         buttonPanel.add(findRoomButton);
-        buttonPanel.add(Box.createRigidArea(new Dimension(0, 10))); // 간격
+        buttonPanel.add(Box.createRigidArea(new Dimension(0, 10)));
         buttonPanel.add(settingsButton);
 
         // 9. 버튼 정렬 (왼쪽 정렬)
@@ -81,32 +78,53 @@ public class LobbyPanel extends JPanel {
         // 10. 전체 LobbyPanel의 WEST (왼쪽) 영역에 버튼 패널 추가
         this.add(buttonPanel, BorderLayout.WEST);
 
-        // 11. 버튼 액션 리스너 (기능X, 화면 전환만)
+        // 11. 버튼 액션 리스너
         
-        // "게임 생성하기" 버튼 -> GamePanel로 이동 (기존 파일의 기능 유지)
+        // "게임 생성하기" 버튼
         createRoomButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 System.out.println("게임 생성하기 클릭 -> 게임 화면으로 전환");
-                cardLayout.show(mainPanel, MainFrame.GAME_PANEL);
+                mainPanel.changePanel(MainFrame.GAME_PANEL);
             }
         });
 
-        // "방 찾기" 버튼 (임시 - 기능 없음)
+        // "방 찾기" 버튼 -> 입력 다이얼로그 후 서버에 참가 요청
         findRoomButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                System.out.println("방 찾기 클릭 (기능 미구현)");
-                // TODO: 방 찾기 팝업 또는 패널 구현
+                // 1. 방 번호 입력 다이얼로그 표시
+                String roomName = JOptionPane.showInputDialog(mainPanel, "참여할 방 번호 또는 이름을 입력하세요:");
+
+                if (roomName != null && !roomName.trim().isEmpty()) {
+                    try {
+                        // 2. 소켓 체크
+                        if (mainPanel.getSocket() == null) {
+                            JOptionPane.showMessageDialog(mainPanel, "서버에 연결되지 않았습니다.", "오류", JOptionPane.ERROR_MESSAGE);
+                            return;
+                        }
+
+                        // 3. 서버로 "/join 방이름" 명령 전송
+                        PrintWriter out = new PrintWriter(mainPanel.getSocket().getOutputStream(), true);
+                        out.println("/join " + roomName.trim());
+                        System.out.println("[Client] 방 참가 요청: " + roomName.trim());
+                        
+                        // 4. 요청 후, 일단 대기방 화면으로 전환 (서버의 응답은 별도의 리스너 스레드에서 처리 필요)
+                        mainPanel.changePanel(MainFrame.ENTER_GAME_PANEL); 
+
+                    } catch (IOException ex) {
+                        ex.printStackTrace();
+                        JOptionPane.showMessageDialog(mainPanel, "통신 오류 발생!", "오류", JOptionPane.ERROR_MESSAGE);
+                    }
+                }
             }
         });
         
-        // "설정" 버튼 (임시 - 기능 없음)
+        // "설정" 버튼
         settingsButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 System.out.println("설정 클릭 (기능 미구현)");
-                // TODO: 설정 팝업 또는 패널 구현
             }
         });
     }
