@@ -142,9 +142,10 @@ public class LoginPanel extends JPanel {
             String response = in.readLine();
             
             if ("OK".equals(response)) {
-                System.out.println("[Client] 서버 접속 성공");
-                mainFrame.setSocket(socket, nickname);  // 성공 시 MainFrame에 소켓 맡김
-                mainFrame.changePanel(MainFrame.LOBBY_PANEL);   // 로비 패널로 이동
+            // IP, 포트, 닉네임을 함께 출력하도록 변경
+            System.out.println("[Client] 서버 접속 성공! (IP: " + ip + ", Port: " + port + ", User: " + nickname + ")");
+            mainFrame.setSocket(socket, nickname);
+            mainFrame.changePanel(MainFrame.LOBBY_PANEL);
             }else {
                 JOptionPane.showMessageDialog(this, "이미 사용 중인 닉네임입니다.");
                 socket.close(); // 실패했으니 소켓 닫기
