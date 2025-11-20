@@ -219,7 +219,7 @@ public class GamePanel extends JPanel {
 
             // 인원수가 일치하면 서버 통신 진행
             String randomRoomNum = roomField.getText();
-            String roomTitle = "공개방_" + randomRoomNum;
+            String roomTitle = randomRoomNum;
 
             try {
                 if (mainFrame.getSocket() == null) {
