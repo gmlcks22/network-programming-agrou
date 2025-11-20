@@ -6,7 +6,6 @@ import java.io.IOException;
 import java.net.Socket;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
-import java.nio.Buffer;
 
 public class MainFrame extends JFrame {
 
@@ -18,13 +17,13 @@ public class MainFrame extends JFrame {
     private String nickname;
 
     private LobbyPanel lobbyPanel; // 인스턴스를 필드에 저장
-    private WaitingPanel enterGamePanel;
+    private WaitingPanel waitingPanel;
 
     // 각 화면의 이름을 상수로 정의
     public static final String LOGIN_PANEL = "client.LoginPanel";
     public static final String LOBBY_PANEL = "client.LobbyPanel";
     public static final String CREATE_GAME_PANEL = "client.CreateGamePanel";
-    public static final String ENTER_GAME_PANEL = "client.EnterGamePanel";
+    public static final String WAITING_PANEL = "client.WaitingPanel";
     public static final String GAME_PANEL = "client.GamePanel";
 
     public MainFrame() {
@@ -42,14 +41,14 @@ public class MainFrame extends JFrame {
         JPanel loginPanel = new LoginPanel(this);
         this.lobbyPanel = new LobbyPanel(this);
         JPanel createGamePanel = new CreateGamePanel(this);
-        this.enterGamePanel = new WaitingPanel(this);
+        this.waitingPanel = new WaitingPanel(this);
         JPanel gamePanel = new GamePanel(this);
 
         // mainPanel에 각 화면을 "이름"과 함께 추가
         mainPanel.add(loginPanel, LOGIN_PANEL);
         mainPanel.add(lobbyPanel, LOBBY_PANEL);
         mainPanel.add(createGamePanel, CREATE_GAME_PANEL);
-        mainPanel.add(this.enterGamePanel, ENTER_GAME_PANEL);
+        mainPanel.add(this.waitingPanel, WAITING_PANEL);
         mainPanel.add(gamePanel, GAME_PANEL);
 
         // 프레임에 mainPanel 추가
@@ -114,7 +113,7 @@ public class MainFrame extends JFrame {
                 String userListString = message.substring(10).trim();
                 // 공백 기준으로 닉네임 분리
                 String[] users = userListString.isEmpty() ? new String[0] : userListString.split(" ");
-                enterGamePanel.updateUserList(users);
+                waitingPanel.updateUserList(users);
                 
             }
             // === 로비 관련 처리 ===
@@ -126,7 +125,7 @@ public class MainFrame extends JFrame {
             // 채팅 및 시스템 메시지 처리 (나머지는 EnterGamePanel의 채팅창으로 보냄)
             else {
                 // todo enterGamePanel 정의. enterGamePanel은 게임 참가 눌렀을 떄 나오는 패널. 대기 방이 아님.
-                enterGamePanel.appendMessage(message);
+                waitingPanel.appendMessage(message);
             }
         });
     }

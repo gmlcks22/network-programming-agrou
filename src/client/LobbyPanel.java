@@ -110,7 +110,7 @@ public class LobbyPanel extends JPanel {
                         System.out.println("[Client] 방 참가 요청: " + roomName.trim());
                         
                         // 4. 요청 후, 일단 대기방 화면으로 전환 (서버의 응답은 별도의 리스너 스레드에서 처리 필요)
-                        mainPanel.changePanel(MainFrame.ENTER_GAME_PANEL); 
+                        mainPanel.changePanel(MainFrame.WAITING_PANEL);
 
                     } catch (IOException ex) {
                         ex.printStackTrace();
