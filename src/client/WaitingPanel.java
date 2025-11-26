@@ -4,6 +4,10 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.BufferedWriter;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.PrintWriter;
 import java.util.Vector;
 
 public class WaitingPanel extends JPanel {
@@ -67,19 +71,37 @@ public class WaitingPanel extends JPanel {
         chatField.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                // TODO: 서버로 채팅 전송 구현 필요 ("/chat " + msg)
-                // 현재는 로컬에서만 출력
                 String msg = chatField.getText();
                 if(!msg.isEmpty()){
-                    appendMessage(mainFrame.getNickname() + ": " + msg);
-                    chatField.setText("");
+                    // 서버로 전송, 쓴 글은 서버가 broadcast 해줄 때 화면에 나옴
+                    try {
+                        PrintWriter out = new PrintWriter(mainFrame.getSocket().getOutputStream(), true);
+                        out.println("/chat " + msg);
+                        chatField.setText("");
+                    } catch (IOException ex) {
+                        ex.printStackTrace();
+                    }
+//                    appendMessage(mainFrame.getNickname() + ": " + msg);
+//                    chatField.setText("");
                 }
             }
         });
 
         exitButton.addActionListener(e -> {
             // TODO: 서버에 방 나가기 요청 ("/leave") 구현 필요
-            mainFrame.changePanel(MainFrame.LOBBY_PANEL);
+            try {
+                PrintWriter out = new PrintWriter(mainFrame.getSocket().getOutputStream(), true);
+                out.println("/leave"); // todo: 서버측과 "leave" 동일한 지 확인
+
+                // todo: 서버측에서 확인을 받고 나갈 필요 있음. 현재는 일단 그냥 전환되도록 해놓음
+                mainFrame.changePanel(MainFrame.LOBBY_PANEL);
+
+                // 대기방 내용 초기화
+                chatArea.setText("");
+                userListModel.clear();
+            } catch (IOException ex) {
+                ex.printStackTrace();
+            }
         });
     }
 
