@@ -85,7 +85,7 @@ public class LobbyPanel extends JPanel {
             @Override
             public void actionPerformed(ActionEvent e) {
                 System.out.println("게임 생성하기 클릭 -> 게임 화면으로 전환");
-                mainPanel.changePanel(MainFrame.GAME_PANEL);
+                mainPanel.changePanel(MainFrame.CREATE_GAME_PANEL);
             }
         });
 

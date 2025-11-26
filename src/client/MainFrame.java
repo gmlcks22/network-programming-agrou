@@ -78,6 +78,7 @@ public class MainFrame extends JFrame {
     // 접속 성공 시, 소켓 저장 + 수신 스레드 시작 + 화면 전환
     public void connectSuccess(Socket socket, String nickname) {
         System.out.println("접속 유저: " + nickname);
+        setSocket(socket, nickname); // 소켓과 닉네임을 메인프레임에 저장
 
         try {
             // 서버로부터 읽어올 스트림 생성
