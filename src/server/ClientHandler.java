@@ -77,7 +77,13 @@ public class ClientHandler implements Runnable {
                     } else {
                         sendMessage("[System] 방에 먼저 참여해야 합니다.");
                     }
-                } else {
+                } else if (message.startsWith("/leave ")) {
+                    if (currentRoom != null) {
+                        currentRoom.removeClient(this); // 방에서 제거, 안내방송, 유저목록
+                    }
+                    System.out.println("[Server] " + nickname + "님이 방을 나갔습니다.");
+                }
+                else {
                     // 기본값은 /chat으로 처리
                     if (currentRoom != null) {
                         currentRoom.broadcastMessage(nickname + ": " + message);

@@ -93,7 +93,7 @@ public class WaitingPanel extends JPanel {
             try {
                 if (mainFrame.getSocket() != null) {
                     PrintWriter out = new PrintWriter(mainFrame.getSocket().getOutputStream(), true);
-                    out.println("/leave"); // todo: 서버측과 "/leave" 동일한 지 확인
+                    out.println("/leave");
                 }
                 // 대기방 내용 초기화
                 chatArea.setText("");
