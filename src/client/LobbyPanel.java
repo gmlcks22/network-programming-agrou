@@ -95,30 +95,31 @@ public class LobbyPanel extends JPanel {
         findRoomButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                // 1. 방 번호 입력 다이얼로그 표시
-                String roomName = JOptionPane.showInputDialog(mainPanel, "참여할 방 번호 또는 이름을 입력하세요:");
-
-                if (roomName != null && !roomName.trim().isEmpty()) {
-                    try {
-                        // 2. 소켓 체크
-                        if (mainPanel.getSocket() == null) {
-                            JOptionPane.showMessageDialog(mainPanel, "서버에 연결되지 않았습니다.", "오류", JOptionPane.ERROR_MESSAGE);
-                            return;
-                        }
-
-                        // 3. 서버로 "/join 방이름" 명령 전송
-                        PrintWriter out = new PrintWriter(mainPanel.getSocket().getOutputStream(), true);
-                        out.println(Protocol.CMD_JOIN + " " + roomName.trim());
-                        System.out.println("[Client] 방 참가 요청: " + roomName.trim());
-                        
-                        // 4. 요청 후, 일단 대기방 화면으로 전환 (서버의 응답은 별도의 리스너 스레드에서 처리 필요)
-                        mainPanel.changePanel(MainFrame.WAITING_PANEL);
-
-                    } catch (IOException ex) {
-                        ex.printStackTrace();
-                        JOptionPane.showMessageDialog(mainPanel, "통신 오류 발생!", "오류", JOptionPane.ERROR_MESSAGE);
-                    }
-                }
+                mainPanel.changePanel(MainFrame.ROOMLIST_PANEL);
+//                // 1. 방 번호 입력 다이얼로그 표시
+//                String roomName = JOptionPane.showInputDialog(mainPanel, "참여할 방 번호 또는 이름을 입력하세요:");
+//
+//                if (roomName != null && !roomName.trim().isEmpty()) {
+//                    try {
+//                        // 2. 소켓 체크
+//                        if (mainPanel.getSocket() == null) {
+//                            JOptionPane.showMessageDialog(mainPanel, "서버에 연결되지 않았습니다.", "오류", JOptionPane.ERROR_MESSAGE);
+//                            return;
+//                        }
+//
+//                        // 3. 서버로 "/join 방이름" 명령 전송
+//                        PrintWriter out = new PrintWriter(mainPanel.getSocket().getOutputStream(), true);
+//                        out.println(Protocol.CMD_JOIN + " " + roomName.trim());
+//                        System.out.println("[Client] 방 참가 요청: " + roomName.trim());
+//
+//                        // 4. 요청 후, 일단 대기방 화면으로 전환 (서버의 응답은 별도의 리스너 스레드에서 처리 필요)
+//                        mainPanel.changePanel(MainFrame.WAITING_PANEL);
+//
+//                    } catch (IOException ex) {
+//                        ex.printStackTrace();
+//                        JOptionPane.showMessageDialog(mainPanel, "통신 오류 발생!", "오류", JOptionPane.ERROR_MESSAGE);
+//                    }
+//                }
             }
         });
         

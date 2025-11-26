@@ -84,6 +84,9 @@ public class ClientHandler implements Runnable {
                         currentRoom.removeClient(this); // 방에서 제거, 안내방송, 유저목록
                     }
                     System.out.println("[Server] " + nickname + "님이 방을 나갔습니다.");
+                } else if (message.equals(Protocol.CMD_ROOMLIST)) {
+                    String roomListStr = Server.ROOM_MANAGER.getRoomListString();
+                    sendMessage(Protocol.CMD_ROOMLIST + " " + roomListStr); // "/roomlist 방1,방2" 전송
                 }
                 else {
                     // 기본값은 /chat으로 처리

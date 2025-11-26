@@ -38,4 +38,12 @@ public class RoomManager {
     }
 
     // TODO: (방 목록 보기, 방 제거 등의 기능 추가 가능)
+    // 방 목록 보기: 현재 방 목록을 콤마(,)로 구분된 문자열로 반환
+    public String getRoomListString() {
+        StringBuilder sb = new StringBuilder();
+        for (GameRoom room : gameRooms) { // gameRooms 리스트 순회
+            sb.append(room.getRoomName()).append(",");
+        }
+        return sb.toString();
+    }
 }

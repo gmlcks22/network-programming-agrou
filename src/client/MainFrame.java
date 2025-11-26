@@ -18,14 +18,16 @@ public class MainFrame extends JFrame {
     private String nickname;
     private LobbyPanel lobbyPanel; // 인스턴스를 필드에 저장
     private WaitingPanel waitingPanel;
-
+    private RoomListPanel roomListPanel;
+    
     // 각 화면의 이름을 상수로 정의
     public static final String LOGIN_PANEL = "client.LoginPanel";
     public static final String LOBBY_PANEL = "client.LobbyPanel";
     public static final String CREATE_GAME_PANEL = "client.CreateGamePanel";
+    public static final String ROOMLIST_PANEL = "client.RoomListPanel";
     public static final String WAITING_PANEL = "client.WaitingPanel";
     public static final String GAME_PANEL = "client.GamePanel";
-
+    
     public MainFrame() {
         setTitle("Wolf Mafia");
         setSize(800, 500);
@@ -43,6 +45,7 @@ public class MainFrame extends JFrame {
         JPanel createGamePanel = new CreateGamePanel(this);
         this.waitingPanel = new WaitingPanel(this);
         JPanel gamePanel = new GamePanel(this);
+        this.roomListPanel = new RoomListPanel(this);
 
         // mainPanel에 각 화면을 "이름"과 함께 추가
         mainPanel.add(loginPanel, LOGIN_PANEL);
@@ -50,6 +53,7 @@ public class MainFrame extends JFrame {
         mainPanel.add(createGamePanel, CREATE_GAME_PANEL);
         mainPanel.add(this.waitingPanel, WAITING_PANEL);
         mainPanel.add(gamePanel, GAME_PANEL);
+        mainPanel.add(this.roomListPanel, ROOMLIST_PANEL);
 
         // 프레임에 mainPanel 추가
         add(mainPanel);
@@ -115,7 +119,12 @@ public class MainFrame extends JFrame {
                 // 공백 기준으로 닉네임 분리
                 String[] users = userListString.isEmpty() ? new String[0] : userListString.split(" ");
                 waitingPanel.updateUserList(users);
-                
+            }
+            // 방 목록 수신 처리
+            else if (message.startsWith(Protocol.CMD_ROOMLIST)) {
+                String listStr = message.substring(Protocol.CMD_ROOMLIST.length() + 1).trim();
+                String[] rooms = listStr.split(","); // 쉼표로 방 구분 /roomlist 방1, 방2, 방3, ...
+                roomListPanel.updateRoomList(rooms);    // 패널 갱신 호출
             }
             // === 로비 관련 처리 ===
             // 서버가 "/roomlist 방1, 방2, ..." 형식으로 보낸다고 가정
