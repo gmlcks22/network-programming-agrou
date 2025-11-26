@@ -77,7 +77,7 @@ public class ClientHandler implements Runnable {
                     } else {
                         sendMessage("[System] 방에 먼저 참여해야 합니다.");
                     }
-                } else if (message.startsWith("/leave ")) {
+                } else if (message.startsWith("/leave")) {
                     if (currentRoom != null) {
                         currentRoom.removeClient(this); // 방에서 제거, 안내방송, 유저목록
                     }
