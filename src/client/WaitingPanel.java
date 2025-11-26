@@ -75,9 +75,11 @@ public class WaitingPanel extends JPanel {
                 if(!msg.isEmpty()){
                     // 서버로 전송, 쓴 글은 서버가 broadcast 해줄 때 화면에 나옴
                     try {
-                        PrintWriter out = new PrintWriter(mainFrame.getSocket().getOutputStream(), true);
-                        out.println("/chat " + msg);
-                        chatField.setText("");
+                        if (mainFrame.getSocket() != null) {
+                            PrintWriter out = new PrintWriter(mainFrame.getSocket().getOutputStream(), true);
+                            out.println("/chat " + msg);
+                            chatField.setText("");
+                        }
                     } catch (IOException ex) {
                         ex.printStackTrace();
                     }
@@ -88,17 +90,16 @@ public class WaitingPanel extends JPanel {
         });
 
         exitButton.addActionListener(e -> {
-            // TODO: 서버에 방 나가기 요청 ("/leave") 구현 필요
             try {
-                PrintWriter out = new PrintWriter(mainFrame.getSocket().getOutputStream(), true);
-                out.println("/leave"); // todo: 서버측과 "leave" 동일한 지 확인
-
-                // todo: 서버측에서 확인을 받고 나갈 필요 있음. 현재는 일단 그냥 전환되도록 해놓음
-                mainFrame.changePanel(MainFrame.LOBBY_PANEL);
-
+                if (mainFrame.getSocket() != null) {
+                    PrintWriter out = new PrintWriter(mainFrame.getSocket().getOutputStream(), true);
+                    out.println("/leave"); // todo: 서버측과 "/leave" 동일한 지 확인
+                }
                 // 대기방 내용 초기화
                 chatArea.setText("");
                 userListModel.clear();
+                // todo: 서버측에서 확인을 받고 나갈 필요 있음. 현재는 일단 그냥 전환되도록 해놓음
+                mainFrame.changePanel(MainFrame.LOBBY_PANEL);
             } catch (IOException ex) {
                 ex.printStackTrace();
             }
