@@ -1,5 +1,7 @@
 package client;
 
+import common.Protocol;
+
 import javax.swing.*;
 import javax.swing.border.TitledBorder;
 import java.awt.*;
@@ -228,7 +230,7 @@ public class CreateGamePanel extends JPanel {
                 }
 
                 PrintWriter out = new PrintWriter(mainFrame.getSocket().getOutputStream(), true);
-                out.println("/create " + roomTitle);
+                out.println(Protocol.CMD_CREATE + " " + roomTitle);
                 System.out.println("[Client] 방 생성 요청: " + roomTitle);
 
                 mainFrame.changePanel(MainFrame.WAITING_PANEL);

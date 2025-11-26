@@ -29,7 +29,7 @@ public class RoomManager {
     public synchronized boolean joinRoom(String roomName, ClientHandler joiner) {
         for (GameRoom room : gameRooms) {
             if (room.getRoomName().equals(roomName)) {
-                // (실제로는 인원수 체크 등이 필요)
+                // TODO: (실제로는 인원수 체크 등이 필요)
                 room.addClient(joiner);
                 return true;
             }
@@ -37,5 +37,5 @@ public class RoomManager {
         return false; // 해당 이름의 방 없음
     }
 
-    // (방 목록 보기, 방 제거 등의 기능 추가 가능)
+    // TODO: (방 목록 보기, 방 제거 등의 기능 추가 가능)
 }

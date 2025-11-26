@@ -1,4 +1,6 @@
 package server;// server.ClientHandler.java
+import common.Protocol;
+
 import java.io.*;
 import java.net.Socket;
 
@@ -59,17 +61,17 @@ public class ClientHandler implements Runnable {
             while ((message = in.readLine()) != null) {
 
                 // --- 명령어 파싱 ---
-                if (message.startsWith("/create ")) {
+                if (message.startsWith(Protocol.CMD_CREATE)) {
                     String roomName = message.substring(8);
                     Server.ROOM_MANAGER.createRoom(roomName, this);
 
-                } else if (message.startsWith("/join ")) {
+                } else if (message.startsWith(Protocol.CMD_JOIN)) {
                     String roomName = message.substring(6);
                     if (!Server.ROOM_MANAGER.joinRoom(roomName, this)) {
                         sendMessage("[System] '" + roomName + "' 방을 찾을 수 없습니다.");
                     }
 
-                } else if (message.startsWith("/chat ")) {
+                } else if (message.startsWith(Protocol.CMD_CHAT)) {
                     String chatMsg = message.substring(6);
                     if (currentRoom != null) {
                         // 4. (핵심) 내가 속한 방(currentRoom)에 메시지 전파를 "요청"
@@ -77,7 +79,7 @@ public class ClientHandler implements Runnable {
                     } else {
                         sendMessage("[System] 방에 먼저 참여해야 합니다.");
                     }
-                } else if (message.startsWith("/leave")) {
+                } else if (message.startsWith(Protocol.CMD_LEAVE)) {
                     if (currentRoom != null) {
                         currentRoom.removeClient(this); // 방에서 제거, 안내방송, 유저목록
                     }

@@ -1,4 +1,6 @@
 package server;// server.GameRoom.java
+import common.Protocol;
+
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
@@ -54,7 +56,7 @@ public class GameRoom {
         }
     }
     public void broadcastUserList() {
-        StringBuilder list = new StringBuilder("/userlist");
+        StringBuilder list = new StringBuilder(Protocol.CMD_USERLIST);
         for (ClientHandler client : clientsInRoom) {
             list.append(" ").append(client.getNickname());
         }

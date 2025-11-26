@@ -1,5 +1,7 @@
 package client;
 
+import common.Protocol;
+
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
@@ -106,7 +108,7 @@ public class LobbyPanel extends JPanel {
 
                         // 3. 서버로 "/join 방이름" 명령 전송
                         PrintWriter out = new PrintWriter(mainPanel.getSocket().getOutputStream(), true);
-                        out.println("/join " + roomName.trim());
+                        out.println(Protocol.CMD_JOIN + " " + roomName.trim());
                         System.out.println("[Client] 방 참가 요청: " + roomName.trim());
                         
                         // 4. 요청 후, 일단 대기방 화면으로 전환 (서버의 응답은 별도의 리스너 스레드에서 처리 필요)

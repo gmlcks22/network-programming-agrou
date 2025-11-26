@@ -1,5 +1,7 @@
 package client;
 
+import common.Protocol;
+
 import javax.swing.*;
 import java.awt.*;
 import java.io.IOException;
@@ -12,10 +14,8 @@ public class MainFrame extends JFrame {
     // CardLayout과 카드를 담을 메인 패널 선언
     private CardLayout cardLayout;
     private JPanel mainPanel; // 모든 "화면" (카드)을 담을 패널
-
     private Socket socket;  // 모든 패널이 공유해야 할 소켓
     private String nickname;
-
     private LobbyPanel lobbyPanel; // 인스턴스를 필드에 저장
     private WaitingPanel waitingPanel;
 
@@ -100,17 +100,17 @@ public class MainFrame extends JFrame {
         SwingUtilities.invokeLater(() -> {
 
             // === 방 입장/생성 관련 처리 ===
-            if (message.equals("join_ok") || message.equals("create_ok")) {
+            if (message.equals(Protocol.RESP_JOIN_OK) || message.equals(Protocol.RESP_CREATE_OK)) {
                 // 방 입장 성공 -> 게임 화면(대기방)으로
                 changePanel(GAME_PANEL);
             }
-            else if (message.startsWith("join_fail")) {
+            else if (message.startsWith(Protocol.RESP_JOIN_FAIL)) {
                 // 방 입장 실패 -> 경고창
                 JOptionPane.showMessageDialog(this, "입장 실패: " + message.substring(11));
             }
             // === 대기방 관련 처리 ===
             // 1. 유저 목록 업데이트 처리 (/userlist 닉1 닉2 ...)
-            else if (message.startsWith("/userlist ")) {
+            else if (message.startsWith(Protocol.CMD_USERLIST)) {
                 String userListString = message.substring(10).trim();
                 // 공백 기준으로 닉네임 분리
                 String[] users = userListString.isEmpty() ? new String[0] : userListString.split(" ");
@@ -119,7 +119,7 @@ public class MainFrame extends JFrame {
             }
             // === 로비 관련 처리 ===
             // 서버가 "/roomlist 방1, 방2, ..." 형식으로 보낸다고 가정
-            else if (message.startsWith("/roomlist ")) {
+            else if (message.startsWith(Protocol.CMD_ROOMLIST)) {
                 // todo lobbyPanel.updateRoomList() 호출 구현 필요
             }
             // === 채팅 처리 ===

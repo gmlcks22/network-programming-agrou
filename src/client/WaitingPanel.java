@@ -1,5 +1,7 @@
 package client;
 
+import common.Protocol;
+
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
@@ -77,7 +79,7 @@ public class WaitingPanel extends JPanel {
                     try {
                         if (mainFrame.getSocket() != null) {
                             PrintWriter out = new PrintWriter(mainFrame.getSocket().getOutputStream(), true);
-                            out.println("/chat " + msg);
+                            out.println(Protocol.CMD_CHAT + " " + msg);
                             chatField.setText("");
                         }
                     } catch (IOException ex) {
@@ -93,7 +95,7 @@ public class WaitingPanel extends JPanel {
             try {
                 if (mainFrame.getSocket() != null) {
                     PrintWriter out = new PrintWriter(mainFrame.getSocket().getOutputStream(), true);
-                    out.println("/leave");
+                    out.println(Protocol.CMD_LEAVE);
                 }
                 // 대기방 내용 초기화
                 chatArea.setText("");
