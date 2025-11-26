@@ -105,11 +105,15 @@ public class MainFrame extends JFrame {
 
             // === 방 입장/생성 관련 처리 ===
             if (message.equals(Protocol.RESP_JOIN_OK) || message.equals(Protocol.RESP_CREATE_OK)) {
-                // 방 입장 성공 -> 게임 화면(대기방)으로
-                changePanel(GAME_PANEL);
+                // 방 입장 성공 -> 대기방으로
+                changePanel(WAITING_PANEL);
             }
             else if (message.startsWith(Protocol.RESP_JOIN_FAIL)) {
                 // 방 입장 실패 -> 경고창
+                String reason = "";
+                if (message.length() > Protocol.RESP_JOIN_FAIL.length()) {
+                    reason = message.substring(Protocol.RESP_JOIN_FAIL.length() + 1);
+                }
                 JOptionPane.showMessageDialog(this, "입장 실패: " + message.substring(11));
             }
             // === 대기방 관련 처리 ===

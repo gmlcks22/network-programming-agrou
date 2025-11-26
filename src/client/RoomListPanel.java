@@ -93,7 +93,7 @@ public class RoomListPanel extends JPanel {
 
         try {
             PrintWriter out = new PrintWriter(mainFrame.getSocket().getOutputStream(), true);
-            out.println(Protocol.CMD_JOIN + " " + roomName);
+            out.println(Protocol.CMD_JOIN + " " + roomName);    // 서버로 "/join 방이름" wjsthd
         } catch (IOException ex) {
             ex.printStackTrace();
         }

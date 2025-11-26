@@ -26,10 +26,12 @@ public class GameRoom {
         if (handler.getCurrentRoom() != null) {
             handler.getCurrentRoom().removeClient(handler);
         }
-
+        // 명단에 추가
         clientsInRoom.add(handler);
         handler.setCurrentRoom(this); // ClientHandler에게 자신이 이 방에 속했음을 알림
 
+        // 당사자에게 입장 성공 신호 보내기
+        handler.sendMessage(Protocol.RESP_JOIN_OK);
         // 입장했다는 사실을 모두에게 알림
         broadcastMessage("[System] '" + handler.getNickname() + "' 님이 방에 입장했습니다.");
         broadcastUserList();
