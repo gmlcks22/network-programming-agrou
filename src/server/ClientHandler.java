@@ -1,5 +1,6 @@
 package server;// server.ClientHandler.java
 import common.Protocol;
+import server.roles.Role;
 
 import java.io.*;
 import java.net.Socket;
@@ -12,6 +13,8 @@ public class ClientHandler implements Runnable {
     private PrintWriter out;    // 클라이언트에게 메시지 송신
     private String nickname;
     private GameRoom currentRoom = null; // 내가 현재 속한 방
+
+    private Role role;
 
     public ClientHandler(Socket socket) {
         try {
@@ -31,6 +34,13 @@ public class ClientHandler implements Runnable {
     public void sendMessage(String message) {
         out.println(message);
     }
+
+    public void setRole(Role role) {
+        this.role = role;
+    }
+    public Role getRole() { return role; }
+    public String getRoleName() { return role != null ? role.getName() : "None"; }
+    public String getFaction() { return role != null ? role.getFaction() : "None"; }
 
     @Override
     public void run() {
@@ -87,6 +97,37 @@ public class ClientHandler implements Runnable {
                 } else if (message.equals(Protocol.CMD_ROOMLIST)) {
                     String roomListStr = Server.ROOM_MANAGER.getRoomListString();
                     sendMessage(Protocol.CMD_ROOMLIST + " " + roomListStr); // "/roomlist 방1,방2" 전송
+                }else if (message.equals(Protocol.CMD_START)) {
+                    if (currentRoom != null) {
+                        // GameRoom에 시작 요청을 위임
+                        currentRoom.startGameRequest(this); 
+                        System.out.println("[Server] " + nickname + "님의 게임 시작 요청을 처리합니다.");
+                    } else {
+                        sendMessage("[System] 방에 먼저 참여해야 게임을 시작할 수 있습니다.");
+                    }
+                } 
+                else if (message.startsWith(Protocol.CMD_NIGHT_ACTION)) {
+                    if (currentRoom == null || !currentRoom.isNight()) {
+                        sendMessage("[System] 지금은 능력을 사용할 수 없습니다.");
+                        continue;
+                    }
+                    
+                    if (role == null || role.getFaction().equals("Citizen")) {
+                        // 시민 역할이라도 능력이 있을 수 있으므로, 해당 역할이 'useNightAbility'를 가지고 있는지 확인
+                        // 현재는 모든 직업이 Role 인터페이스를 구현했으므로, 능력이 없는 직업(시민)은 별도의 클래스로 처리 필요
+                        if (role == null || role.getName().equals("Citizen")) {
+                            sendMessage("[System] 당신은 능력을 사용할 수 없습니다.");
+                            continue;
+                        }
+                    }
+
+                    // 명령에서 대상 닉네임 추출
+                    String targetNickname = message.substring(Protocol.CMD_NIGHT_ACTION.length() + 1).trim();
+                    
+                    // Role 객체의 능력 사용 메소드를 호출 (GameRoom에 능력 저장)
+                    String response = role.useNightAbility(targetNickname, currentRoom);
+
+                    sendMessage("[System] " + response); // 능력 사용 성공 응답
                 }
                 else {
                     // 기본값은 /chat으로 처리

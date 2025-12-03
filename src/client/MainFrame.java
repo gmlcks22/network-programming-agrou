@@ -134,6 +134,19 @@ public class MainFrame extends JFrame {
             // 서버가 "/roomlist 방1, 방2, ..." 형식으로 보낸다고 가정
             else if (message.startsWith(Protocol.CMD_ROOMLIST)) {
                 // todo lobbyPanel.updateRoomList() 호출 구현 필요
+            }else if (message.startsWith(Protocol.CMD_ROLE_ASSIGN)) {
+                String[] parts = message.substring(Protocol.CMD_ROLE_ASSIGN.length() + 1).split(" ");
+                String roleName = parts[0];
+                String faction = parts[1];
+                
+                // 1. 사용자에게 직업 알림
+                JOptionPane.showMessageDialog(this, 
+                    "당신의 직업은 [" + roleName + "]이며, 진영은 [" + faction + "]입니다.", 
+                    "직업 배정 완료", 
+                    JOptionPane.INFORMATION_MESSAGE);
+                    
+                // 2. ★ 이제 게임이 시작되었으므로 GamePanel로 전환
+                changePanel(GAME_PANEL); 
             }
             // === 채팅 처리 ===
             // 채팅 및 시스템 메시지 처리 (나머지는 EnterGamePanel의 채팅창으로 보냄)

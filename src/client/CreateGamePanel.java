@@ -4,14 +4,20 @@ import common.Protocol;
 
 import javax.swing.*;
 import javax.swing.border.TitledBorder;
+
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
+
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.util.Map;
+
 
 public class CreateGamePanel extends JPanel {
 
@@ -24,9 +30,22 @@ public class CreateGamePanel extends JPanel {
     private JPanel selectedRolesListPanel; // 역할이 쌓일 패널
     private JTextField roomField; 
     
-    // 현재 선택된 역할의 총 인원수
-    private int selectedRoleCount = 0; 
+    private static final Map<String, String> ROLE_FACTIONS = Map.of(
+    "경비병", "Citizen",
+    "늑대인간", "Mafia",
+    "독재자", "Citizen", // 예시
+    "마녀", "Citizen",   // 예시
+    "사냥꾼", "Citizen", // 예시
+    "선견자", "Citizen",
+    "시민", "Citizen",
+    "천사", "Citizen",
+    "큐피드", "Citizen"  
+    );
 
+    private int selectedRoleCount = 0; 
+    private int selectedMafiaCount = 0;
+
+    
     public CreateGamePanel(MainFrame mainFrame) {
         this.mainFrame = mainFrame;
 
@@ -250,6 +269,45 @@ public class CreateGamePanel extends JPanel {
         });
     }
 
+    private class SelectedRoleLabel extends JLabel {
+        private final String roleName;
+        private final String faction;
+
+        public SelectedRoleLabel(String roleName, String faction) {
+            super(roleName);
+            this.roleName = roleName;
+            this.faction = faction;
+            setFont(new Font("맑은 고딕", Font.PLAIN, 14));
+            setAlignmentX(Component.LEFT_ALIGNMENT);
+            setOpaque(true); // 배경색 지정을 위해 필요
+            setBackground(Color.WHITE); 
+            setBorder(BorderFactory.createEmptyBorder(0, 5, 0, 0)); // 약간의 왼쪽 패딩
+            
+            // 마우스 클릭 리스너 추가
+            addMouseListener(new MouseAdapter() {
+                @Override
+                public void mouseClicked(MouseEvent e) {
+                    removeRoleFromSelectedList(SelectedRoleLabel.this); // 클릭 시 제거 로직 호출
+                }
+
+                @Override
+                public void mouseEntered(MouseEvent e) {
+                    // 마우스 올리면 배경색 변경 (삭제 가능함을 시각적으로 보여줌)
+                    setBackground(new Color(255, 200, 200)); // 연한 빨강
+                }
+
+                @Override
+                public void mouseExited(MouseEvent e) {
+                    setBackground(Color.WHITE); // 마우스 나가면 원래대로
+                }
+            });
+        }
+
+        public String getRoleFaction() {
+            return faction;
+        }
+    }
+
     // 화면 데이터를 처음 상태로 리셋하는 메소드
     private void resetData() {
         // 인원수 리셋
@@ -258,6 +316,7 @@ public class CreateGamePanel extends JPanel {
         
         // 역할 수 초기화
         selectedRoleCount = 0; 
+        selectedMafiaCount = 0;
 
         // 방 번호 새로 랜덤 생성
         int randomNum = (int)(Math.random() * 10000000) + 1000000; 
@@ -271,6 +330,43 @@ public class CreateGamePanel extends JPanel {
         System.out.println("[Client] 게임 생성 화면 데이터 리셋 완료");
     }
 
+
+    private void removeRoleFromSelectedList(SelectedRoleLabel roleLabel) {
+        
+        String roleName = roleLabel.getText();
+        String faction = roleLabel.getRoleFaction();
+
+        // 1. 카운터 감소
+        selectedRoleCount--;
+
+        if (faction.equals("Mafia")) {
+            selectedMafiaCount--;
+        }
+        
+        // 2. UI에서 제거
+        selectedRolesListPanel.remove(roleLabel);
+        
+        // 제거된 역할 레이블 뒤에 있는 RigidArea (간격)도 찾아서 제거해야 깔끔합니다.
+        // BoxLayout에서는 컴포넌트 사이에 Box.createRigidArea로 간격이 들어가므로, 같이 제거
+        Component[] components = selectedRolesListPanel.getComponents();
+        for (int i = 0; i < components.length; i++) {
+            // 현재 제거하려는 레이블과 일치하는 컴포넌트를 찾음
+            if (components[i] == roleLabel) {
+                // 역할 레이블 바로 다음에 있는 간격(RigidArea) 제거
+                // 인덱스가 배열 범위를 넘지 않도록 확인 (i + 1 < components.length)
+                if (i + 1 < components.length && components[i+1] instanceof Box.Filler) {
+                    selectedRolesListPanel.remove(components[i+1]);
+                }
+                break; // 역할 레이블과 간격을 제거했으므로 반복문 종료
+            }
+        }
+        
+        System.out.println("역할 제거: " + roleName + ", 남은 역할 수: " + selectedRoleCount + ", 남은 늑대 수: " + selectedMafiaCount);
+
+        selectedRolesListPanel.revalidate();
+        selectedRolesListPanel.repaint();
+    }
+    
     // 오른쪽 패널에 역할 텍스트 추가하는 함수
     private void addRoleToSelectedList(String roleName) {
         
@@ -281,6 +377,21 @@ public class CreateGamePanel extends JPanel {
                 "인원 초과", 
                 JOptionPane.WARNING_MESSAGE);
             return; // 초과하면 추가하지 않고 종료
+        }
+
+        String faction = ROLE_FACTIONS.getOrDefault(roleName, "Citizen");
+            if (faction.equals("Mafia")) {
+                // [조건] 4명 방에서는 늑대인간은 최대 1명까지만 가능하다고 가정
+                final int MAX_WOLF = currentPopulation / 3; // 전체 인원의 절반보다 작게
+                
+                if (selectedMafiaCount >= MAX_WOLF) {
+                    JOptionPane.showMessageDialog(this, 
+                        currentPopulation + "인 방에서는 마피아 진영을 최대 " + MAX_WOLF + "명까지만 선택할 수 있습니다.", 
+                        "밸런스 오류", 
+                        JOptionPane.WARNING_MESSAGE);
+                    return; // 마피아 수 제한에 걸리면 추가하지 않고 종료
+                }
+            selectedMafiaCount++; // 마피아 수 증가
         }
 
         // 역할 추가 로직

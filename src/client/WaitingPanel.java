@@ -6,11 +6,8 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.io.BufferedWriter;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.util.Vector;
 
 public class WaitingPanel extends JPanel {
     private MainFrame mainFrame;
@@ -20,6 +17,9 @@ public class WaitingPanel extends JPanel {
     // 유저 목록 표시를 위한 JList와 모델
     private JList<String> userList;
     private DefaultListModel<String> userListModel; 
+    
+    // ★ 게임 시작 버튼 필드 추가
+    private JButton startGameButton; 
 
     public WaitingPanel(MainFrame mainFrame) {
         this.mainFrame = mainFrame;
@@ -53,18 +53,29 @@ public class WaitingPanel extends JPanel {
         
         add(centerPanel, BorderLayout.CENTER); // 메인 패널의 중앙에 추가
 
-        // 3. 하단: 채팅 입력 및 나가기 버튼
-        JPanel bottomPanel = new JPanel(new BorderLayout());
+        // 3. 하단: 채팅 입력 필드 및 버튼
+        JPanel bottomPanel = new JPanel(new BorderLayout(5, 5)); // 내부 간격 5px
         
         chatField = new JTextField();
         chatField.setFont(new Font("맑은 고딕", Font.PLAIN, 14));
         
-        JButton exitButton = new JButton("나가기");
-        exitButton.setBackground(new Color(255, 100, 100));
+        // ★ '게임 시작' 버튼 생성
+        startGameButton = new JButton("게임 시작");
+        startGameButton.setBackground(new Color(0, 150, 0)); 
+        startGameButton.setForeground(Color.WHITE);
+        
+        // '방 나가기' 버튼
+        JButton exitButton = new JButton("방 나가기");
+        exitButton.setBackground(new Color(200, 50, 50));
         exitButton.setForeground(Color.WHITE);
 
+        // 버튼들을 담을 패널 생성 (시작 버튼과 나가기 버튼)
+        JPanel buttonGroup = new JPanel(new FlowLayout(FlowLayout.RIGHT, 5, 0));
+        buttonGroup.add(startGameButton); // ★ 시작 버튼 추가
+        buttonGroup.add(exitButton);
+        
         bottomPanel.add(chatField, BorderLayout.CENTER);
-        bottomPanel.add(exitButton, BorderLayout.EAST);
+        bottomPanel.add(buttonGroup, BorderLayout.EAST); // 버튼 그룹을 EAST에 배치
         
         add(bottomPanel, BorderLayout.SOUTH);
 
@@ -85,9 +96,22 @@ public class WaitingPanel extends JPanel {
                     } catch (IOException ex) {
                         ex.printStackTrace();
                     }
-//                    appendMessage(mainFrame.getNickname() + ": " + msg);
-//                    chatField.setText("");
                 }
+            }
+        });
+
+        // ★ 게임 시작 버튼 리스너
+        startGameButton.addActionListener(e -> {
+            try {
+                // 서버에 /start 명령 전송
+                if (mainFrame.getSocket() != null) {
+                    PrintWriter out = new PrintWriter(mainFrame.getSocket().getOutputStream(), true);
+                    out.println(Protocol.CMD_START); 
+                    System.out.println("[Client] 게임 시작 요청 전송");
+                }
+            } catch (IOException ex) {
+                ex.printStackTrace();
+                appendMessage("[System] 서버 통신 오류: 게임 시작 요청 실패");
             }
         });
 
@@ -100,7 +124,6 @@ public class WaitingPanel extends JPanel {
                 // 대기방 내용 초기화
                 chatArea.setText("");
                 userListModel.clear();
-                // todo: 서버측에서 확인을 받고 나갈 필요 있음. 현재는 일단 그냥 전환되도록 해놓음
                 mainFrame.changePanel(MainFrame.LOBBY_PANEL);
             } catch (IOException ex) {
                 ex.printStackTrace();
