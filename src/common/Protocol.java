@@ -9,6 +9,7 @@ public class Protocol {
     public static final String CMD_START = "/start";
     public static final String CMD_NIGHT_ACTION = "/nightvote";
     public static final String CMD_ROLE_ASSIGN = "/roleassign";
+    public static final String CMD_GAME_ROLES = "/gameroles";
     // 서버 -> 클라이언트 응답
     public static final String RESP_JOIN_OK = "join_ok";
     public static final String RESP_CREATE_OK = "create_ok";
