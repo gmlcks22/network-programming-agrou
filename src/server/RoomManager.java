@@ -1,47 +1,43 @@
-package server;// server.RoomManager.java
+package server;
+
+import common.Protocol;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
-// CopyOnWriteArrayList는 여러 스레드가 리스트를 읽고 수정할 때
-// 충돌을 방지(Thread-safe)하기 위해 사용.
-// 게임방 장부 관리자
 public class RoomManager {
 
     private List<GameRoom> gameRooms;
 
     public RoomManager() {
         this.gameRooms = new CopyOnWriteArrayList<>();
-        // 테스트를 위해 기본 방 1개 생성
-        gameRooms.add(new GameRoom("기본방 (101호)"));
+        gameRooms.add(new GameRoom("기본방 (101호)", "늑대인간,경비병,선견자,시민"));
     }
 
-    // 1. 방 생성 (ClientHandler가 호출)
-    public synchronized void createRoom(String roomName, ClientHandler creator) {
-        GameRoom newRoom = new GameRoom(roomName);
+    public synchronized void createRoom(String roomName, String customRoleConfig, ClientHandler creator) {
+        
+        // 전달받은 역할 설정으로 방 생성
+        GameRoom newRoom = new GameRoom(roomName, customRoleConfig);
         gameRooms.add(newRoom);
 
-        // 방을 생성한 사람은 자동으로 그 방에 참여
+        // 방장 입장 처리
         newRoom.addClient(creator);
-        creator.sendMessage("[System] " + roomName + " 방이 생성되었습니다. (자동 입장)");
+        creator.sendMessage("[System] " + roomName + " 방이 생성되었습니다. (방장 자동 입장)");
+        creator.sendMessage(Protocol.RESP_CREATE_OK); 
     }
 
-    // 2. 방 참여 (ClientHandler가 호출)
     public synchronized boolean joinRoom(String roomName, ClientHandler joiner) {
         for (GameRoom room : gameRooms) {
             if (room.getRoomName().equals(roomName)) {
-                // TODO: (실제로는 인원수 체크 등이 필요)
                 room.addClient(joiner);
                 return true;
             }
         }
-        return false; // 해당 이름의 방 없음
+        return false;
     }
 
-    // TODO: (방 목록 보기, 방 제거 등의 기능 추가 가능)
-    // 방 목록 보기: 현재 방 목록을 콤마(,)로 구분된 문자열로 반환
     public String getRoomListString() {
         StringBuilder sb = new StringBuilder();
-        for (GameRoom room : gameRooms) { // gameRooms 리스트 순회
+        for (GameRoom room : gameRooms) {
             sb.append(room.getRoomName()).append(",");
         }
         return sb.toString();

@@ -1,106 +1,103 @@
-// server/engine/GameEngine.java
-package server;
+package server; 
 
-import server.ClientHandler;
-import server.GameRoom;
-import server.roles.*;
-
+import common.Protocol;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import server.roles.*;
 
 public class GameEngine {
 
-    private GameRoom room; // 현재 게임 룸 참조
+    private GameRoom room; 
 
     public GameEngine(GameRoom room) {
         this.room = room;
     }
 
-    /**
-     * 1. 인원수에 맞춰 직업을 랜덤 배정하고 게임을 시작합니다.
-     */
     public void assignRolesAndStartGame() {
         List<ClientHandler> clients = room.getClientsInRoom();
-        if (clients.size() < 4) {
-            room.broadcastMessage("[System] 게임을 시작하려면 최소 4명이 필요합니다.");
+        String roleConfig = room.getCustomRoleConfig(); 
+        
+        String[] roleNames = roleConfig.split(",");
+        
+        if (roleNames.length != clients.size()) {
+            room.broadcastMessage("[System] 오류: 역할 수(" + roleNames.length + ")와 플레이어 수(" + clients.size() + ")가 일치하지 않습니다.");
             return;
         }
 
-        List<Role> rolesToAssign = generateRoleList(clients.size());
-        Collections.shuffle(rolesToAssign);
-
-        for (int i = 0; i < clients.size(); i++) {
-            clients.get(i).setRole(rolesToAssign.get(i));
-            // ... (직업 배정 알림 로직)
+        List<Role> rolesToAssign = new LinkedList<>();
+        for (String roleName : roleNames) {
+            Role role = createRoleInstance(roleName.trim()); 
+            if (role != null) {
+                rolesToAssign.add(role);
+            } else {
+                room.broadcastMessage("[System] 오류: 정의되지 않은 역할(" + roleName + ")이 포함되어 있습니다.");
+                return;
+            }
         }
-
+        
+        Collections.shuffle(rolesToAssign); 
+        
+        for (int i = 0; i < clients.size(); i++) {
+            ClientHandler client = clients.get(i);
+            Role assignedRole = rolesToAssign.get(i);
+            
+            client.setRole(assignedRole);
+            client.sendMessage(
+                Protocol.CMD_ROLE_ASSIGN + " " + assignedRole.getName() + " " + assignedRole.getFaction()
+            );
+            System.out.println("[GameEngine] " + client.getNickname() + "에게 " + assignedRole.getName() + " 배정");
+        }
+        
+        room.broadcastMessage(Protocol.CMD_GAME_ROLES + " " + roleConfig);
+        
+        room.setIsNight(false);
         room.broadcastMessage("--- [게임 시작] ---");
-        // ... (게임 시작 알림)
+        room.broadcastMessage("[System] 직업이 배정되었습니다. 첫 번째 낮이 시작됩니다!");
     }
 
-    /**
-     * 2. 밤 능력을 취합하여 결과를 처리합니다. (GameRoom의 로직 이동)
-     */
     public void processNight() {
+        if (!room.isNight()) return;
+        
+        room.setIsNight(false); 
         Map<String, String> nightActions = room.getNightActions();
         
-        // 늑대/경비 상호작용 처리, 선견자 정보 제공, 사망자 처리 등 
-        // 게임의 모든 규칙 로직을 여기에 구현합니다.
-
-        // ...
+        // ... (밤 로직)
+        
         nightActions.clear();
+        room.broadcastMessage("[System] 이제 낮이 시작됩니다. 투표를 준비하세요.");
     }
     
     /**
-     * 인원수에 따른 직업 목록을 생성하는 헬퍼 메소드 (GameRoom의 로직 이동)
+     * 역할 이름에 따라 해당 Role 클래스의 인스턴스를 생성하는 헬퍼 메소드
      */
-    private List<Role> generateRoleList(int population) {
-        List<Role> roles = new LinkedList<>();
-
-        int mafiaCount = 0;
-        int citizenCount = 0;
-        
-        // 최대 늑대인간 수
-        final int MAX_WOLF = population / 3;
-
-        // --- 1. 필수 역할 배치 ---
-    
-        // 늑대인간 1명 필수
-        if (population >= 4) {
-        roles.add(new WolfRole()); 
-        mafiaCount++;
+    private Role createRoleInstance(String roleName) {
+        switch (roleName) {
+            case "늑대인간":
+                return new WolfRole(); // 내부에서 "늑대인간" 반환
+            case "경비병":
+                return new GuardRole(); // 내부에서 "경비병" 반환
+            case "선견자":
+                return new SeerRole(); // 내부에서 "선견자" 반환
+            
+            // 특수 직업들을 한글 이름으로 생성
+            case "독재자":
+                return new CitizenRole("독재자");
+            case "마녀":
+                return new CitizenRole("마녀");
+            case "사냥꾼":
+                return new CitizenRole("사냥꾼");
+            case "천사":
+                return new CitizenRole("천사");
+            case "큐피드":
+                return new CitizenRole("큐피드");
+                
+            case "시민":
+                return new CitizenRole(); // 기본값 "시민"
+            default:
+                // 혹시 모를 예외 처리를 위해 기본 시민으로 반환하거나 null
+                return new CitizenRole("시민"); 
         }
-        
-        // 선견자, 경비병 필수
-        if (population >= 4) {
-            roles.add(new SeerRole());
-            roles.add(new GuardRole());
-            citizenCount += 2;
-        }
-
-        List<Role> remainingRoles = new LinkedList<>();
-    
-    // 예시: 늑대인간 추가 조건 (7명 이상일 때 2마리)
-    if (population >= 7 && mafiaCount < MAX_WOLF) {
-        remainingRoles.add(new WolfRole());
-        mafiaCount++;
     }
-
-    // 남은 인원 (현재까지 배정된 역할 수 제외)
-    int remainingPopulation = population - roles.size();
-    
-    // 나머지 인원을 채우기
-    for (int i = 0; i < remainingPopulation; i++) {
-        // 늑대인간 최대 수를 넘지 않았다면, 늑대인간을 추가할 기회를 줄 수 있지만,
-        // 여기서는 나머지를 모두 시민으로 채워 밸런스를 맞춥니다.
-        
-        roles.add(new CitizenRole());
-        citizenCount++;
-    }
-        return roles;
-    }
-
-    // ... (향후 낮 투표 처리, 승리 조건 확인 로직 추가)
 }

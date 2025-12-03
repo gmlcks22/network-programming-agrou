@@ -1,9 +1,8 @@
 package server;// server.ClientHandler.java
 import common.Protocol;
-import server.roles.Role;
-
 import java.io.*;
 import java.net.Socket;
+import server.roles.Role;
 
 // 서버 내부에 상주하는 유저(클라이언트)
 public class ClientHandler implements Runnable {
@@ -72,8 +71,21 @@ public class ClientHandler implements Runnable {
 
                 // --- 명령어 파싱 ---
                 if (message.startsWith(Protocol.CMD_CREATE)) {
-                    String roomName = message.substring(8);
-                    Server.ROOM_MANAGER.createRoom(roomName, this);
+                    // 메시지를 방 제목과 역할 목록으로 분리
+                    String content = message.substring(Protocol.CMD_CREATE.length() + 1).trim();
+                    
+                    // "방제목 역할목록"을 공백 기준으로 나눔 (2개 부분으로만 분리)
+                    String[] parts = content.split(" ", 2); 
+                    
+                    if (parts.length < 2) {
+                        sendMessage("[System] 방 생성 형식이 올바르지 않습니다.");
+                    } else {
+                        String roomName = parts[0];
+                        String roleConfig = parts[1]; // 역할 목록 문자열
+                        
+                        // 수정된 createRoom 호출
+                        Server.ROOM_MANAGER.createRoom(roomName, roleConfig, this);
+                    }
 
                 } else if (message.startsWith(Protocol.CMD_JOIN)) {
                     String roomName = message.substring(6);
@@ -97,15 +109,13 @@ public class ClientHandler implements Runnable {
                 } else if (message.equals(Protocol.CMD_ROOMLIST)) {
                     String roomListStr = Server.ROOM_MANAGER.getRoomListString();
                     sendMessage(Protocol.CMD_ROOMLIST + " " + roomListStr); // "/roomlist 방1,방2" 전송
-                }else if (message.equals(Protocol.CMD_START)) {
-                    if (currentRoom != null) {
-                        // GameRoom에 시작 요청을 위임
-                        currentRoom.startGameRequest(this); 
-                        System.out.println("[Server] " + nickname + "님의 게임 시작 요청을 처리합니다.");
-                    } else {
-                        sendMessage("[System] 방에 먼저 참여해야 게임을 시작할 수 있습니다.");
-                    }
-                } 
+                }else if (message.equals(Protocol.CMD_START)) { // 게임 시작 명령 처리 확인
+                     if (currentRoom != null) {
+                        currentRoom.startGameRequest(this);
+                     } else {
+                        sendMessage("[System] 방에 입장해야 합니다.");
+                     }
+                }
                 else if (message.startsWith(Protocol.CMD_NIGHT_ACTION)) {
                     if (currentRoom == null || !currentRoom.isNight()) {
                         sendMessage("[System] 지금은 능력을 사용할 수 없습니다.");
