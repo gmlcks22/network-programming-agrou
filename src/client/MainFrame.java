@@ -19,7 +19,7 @@ public class MainFrame extends JFrame {
     private LobbyPanel lobbyPanel; // 인스턴스를 필드에 저장
     private WaitingPanel waitingPanel;
     private RoomListPanel roomListPanel;
-    
+    private GamePanel gamePanel;
     // 각 화면의 이름을 상수로 정의
     public static final String LOGIN_PANEL = "client.LoginPanel";
     public static final String LOBBY_PANEL = "client.LobbyPanel";
@@ -44,7 +44,7 @@ public class MainFrame extends JFrame {
         this.lobbyPanel = new LobbyPanel(this);
         JPanel createGamePanel = new CreateGamePanel(this);
         this.waitingPanel = new WaitingPanel(this);
-        JPanel gamePanel = new GamePanel(this);
+        this.gamePanel = new GamePanel(this);
         this.roomListPanel = new RoomListPanel(this);
 
         // mainPanel에 각 화면을 "이름"과 함께 추가
@@ -145,14 +145,21 @@ public class MainFrame extends JFrame {
                     "직업 배정 완료", 
                     JOptionPane.INFORMATION_MESSAGE);
                     
-                // 2. ★ 이제 게임이 시작되었으므로 GamePanel로 전환
+                // 2. GamePanel로 전환
                 changePanel(GAME_PANEL); 
             }
+            else if (message.startsWith(Protocol.CMD_GAME_ROLES)) {
+                String rolesStr = message.substring(Protocol.CMD_GAME_ROLES.length() + 1).trim();
+                String[] roles = rolesStr.split(",");
+                
+
+                gamePanel.updateRoleBook(roles);
+            }
             // === 채팅 처리 ===
-            // 채팅 및 시스템 메시지 처리 (나머지는 EnterGamePanel의 채팅창으로 보냄)
             else {
-                // todo enterGamePanel 정의. enterGamePanel은 게임 참가 눌렀을 떄 나오는 패널. 대기 방이 아님.
+                // 현재는 일단 대기방 채팅창에만 출력 
                 waitingPanel.appendMessage(message);
+                gamePanel.appendMessage(message); // 게임방 채팅창에도 추가
             }
         });
     }
