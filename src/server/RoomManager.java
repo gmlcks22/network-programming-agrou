@@ -29,7 +29,6 @@ public class RoomManager {
     public synchronized boolean joinRoom(String roomName, ClientHandler joiner) {
         for (GameRoom room : gameRooms) {
             if (room.getRoomName().equals(roomName)) {
-                // TODO: (실제로는 인원수 체크 등이 필요)
                 room.addClient(joiner);
                 return true;
             }
@@ -37,7 +36,12 @@ public class RoomManager {
         return false; // 해당 이름의 방 없음
     }
 
-    // TODO: (방 목록 보기, 방 제거 등의 기능 추가 가능)
+    // [추가] 방 삭제 메소드
+    public synchronized void removeRoom(GameRoom room) {
+        gameRooms.remove(room);
+        System.out.println("[Server] 방 삭제됨: " + room.getRoomName());
+    }
+
     // 방 목록 보기: 현재 방 목록을 콤마(,)로 구분된 문자열로 반환
     public String getRoomListString() {
         StringBuilder sb = new StringBuilder();

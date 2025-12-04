@@ -130,11 +130,10 @@ public class MainFrame extends JFrame {
                 String[] rooms = listStr.split(","); // 쉼표로 방 구분 /roomlist 방1, 방2, 방3, ...
                 roomListPanel.updateRoomList(rooms);    // 패널 갱신 호출
             }
-            // === 로비 관련 처리 ===
-            // 서버가 "/roomlist 방1, 방2, ..." 형식으로 보낸다고 가정
-            else if (message.startsWith(Protocol.CMD_ROOMLIST)) {
-                // todo lobbyPanel.updateRoomList() 호출 구현 필요
-            }
+//            // === 로비 관련 처리 ===
+//            // 서버가 "/roomlist 방1, 방2, ..." 형식으로 보낸다고 가정
+//            else if (message.startsWith(Protocol.CMD_ROOMLIST)) {
+//            }
             // === 채팅 처리 ===
             // 채팅 및 시스템 메시지 처리 (나머지는 EnterGamePanel의 채팅창으로 보냄)
             else {

@@ -42,9 +42,14 @@ public class GameRoom {
         clientsInRoom.remove(handler);
         handler.setCurrentRoom(null); // 클라이언트의 소속 방 정보를 null로
 
-        // 나갔다는 사실을 방에 "남아있는" 사람들에게 알림
-        broadcastMessage("[System] '" + handler.getNickname() + "' 님이 방을 나갔습니다.");
-        broadcastUserList();
+        if (clientsInRoom.isEmpty()) {
+            // 1. 남은 사람이 없으면 방 폭파 (RoomManager에게 삭제 요청)
+            Server.ROOM_MANAGER.removeRoom(this);
+        } else {
+            // 2. 사람이 남아있으면 퇴장 알림 및 목록 갱신
+            broadcastMessage("[System] '" + handler.getNickname() + "' 님이 방을 나갔습니다.");
+            broadcastUserList();
+        }
     }
     // 메시지 전파 (Broadcasting)
     // ClientHandler가 채팅을 치면 이 메소드가 호출됨
