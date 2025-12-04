@@ -295,13 +295,19 @@ public class GamePanel extends JPanel {
     }
 
     private ImageIcon loadScaledImage(String path, int width, int height) {
-        File imgFile = new File(path);
-        if (imgFile.exists()) {
-            ImageIcon originalIcon = new ImageIcon(imgFile.getAbsolutePath());
+        String resourcePath = path.replace("src", ""); // "src" 제거
+        
+        // 리소스 URL 가져오기
+        java.net.URL imgURL = getClass().getResource(resourcePath);
+        
+        if (imgURL != null) {
+            ImageIcon originalIcon = new ImageIcon(imgURL);
             Image img = originalIcon.getImage();
             Image newImg = img.getScaledInstance(width, height, Image.SCALE_SMOOTH);
             return new ImageIcon(newImg);
+        } else {
+            System.err.println("이미지를 찾을 수 없습니다: " + resourcePath);
+            return null;
         }
-        return null;
     }
 }

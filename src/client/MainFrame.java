@@ -19,7 +19,10 @@ public class MainFrame extends JFrame {
     private LobbyPanel lobbyPanel; // 인스턴스를 필드에 저장
     private WaitingPanel waitingPanel;
     private RoomListPanel roomListPanel;
-    private GamePanel gamePanel;
+    
+    // GamePanel을 멤버 변수(필드)로 선언
+    private GamePanel gamePanel; 
+    
     // 각 화면의 이름을 상수로 정의
     public static final String LOGIN_PANEL = "client.LoginPanel";
     public static final String LOBBY_PANEL = "client.LobbyPanel";
@@ -30,7 +33,7 @@ public class MainFrame extends JFrame {
     
     public MainFrame() {
         setTitle("Wolf Mafia");
-        setSize(800, 500);
+        setSize(800, 600); // 게임 화면을 고려해 크기를 조금 키움
         setResizable(false);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLocationRelativeTo(null); // 화면 중앙에
@@ -39,20 +42,20 @@ public class MainFrame extends JFrame {
         cardLayout = new CardLayout();
         mainPanel = new JPanel(cardLayout);
 
-        // 각 화면(JPanel) 생성, MainFrame을 넘기도록 수정. 서버와의 통신을 위함
+        // 각 화면(JPanel) 생성
         JPanel loginPanel = new LoginPanel(this);
         this.lobbyPanel = new LobbyPanel(this);
         JPanel createGamePanel = new CreateGamePanel(this);
         this.waitingPanel = new WaitingPanel(this);
-        this.gamePanel = new GamePanel(this);
         this.roomListPanel = new RoomListPanel(this);
+        this.gamePanel = new GamePanel(this); 
 
         // mainPanel에 각 화면을 "이름"과 함께 추가
         mainPanel.add(loginPanel, LOGIN_PANEL);
         mainPanel.add(lobbyPanel, LOBBY_PANEL);
         mainPanel.add(createGamePanel, CREATE_GAME_PANEL);
         mainPanel.add(this.waitingPanel, WAITING_PANEL);
-        mainPanel.add(gamePanel, GAME_PANEL);
+        mainPanel.add(this.gamePanel, GAME_PANEL);
         mainPanel.add(this.roomListPanel, ROOMLIST_PANEL);
 
         // 프레임에 mainPanel 추가
@@ -78,6 +81,10 @@ public class MainFrame extends JFrame {
     public String getNickname() {
         return this.nickname;
     }
+    
+    // 추가된 Getter
+    public WaitingPanel getWaitingPanel() { return waitingPanel; }
+    public RoomListPanel getRoomListPanel() { return roomListPanel; }
 
     // 접속 성공 시, 소켓 저장 + 수신 스레드 시작 + 화면 전환
     public void connectSuccess(Socket socket, String nickname) {
@@ -123,6 +130,11 @@ public class MainFrame extends JFrame {
                 // 공백 기준으로 닉네임 분리
                 String[] users = userListString.isEmpty() ? new String[0] : userListString.split(" ");
                 waitingPanel.updateUserList(users);
+                
+                // 게임 패널에도 유저 목록 전달
+                if (gamePanel != null) {
+                    gamePanel.updateUserList(users);
+                }
             }
             // 방 목록 수신 처리
             else if (message.startsWith(Protocol.CMD_ROOMLIST)) {
@@ -134,32 +146,43 @@ public class MainFrame extends JFrame {
             // 서버가 "/roomlist 방1, 방2, ..." 형식으로 보낸다고 가정
             else if (message.startsWith(Protocol.CMD_ROOMLIST)) {
                 // todo lobbyPanel.updateRoomList() 호출 구현 필요
-            }else if (message.startsWith(Protocol.CMD_ROLE_ASSIGN)) {
+            }
+            // 직업 배정 알림 처리
+            else if (message.startsWith(Protocol.CMD_ROLE_ASSIGN)) {
                 String[] parts = message.substring(Protocol.CMD_ROLE_ASSIGN.length() + 1).split(" ");
                 String roleName = parts[0];
                 String faction = parts[1];
                 
-                // 1. 사용자에게 직업 알림
+                // 1. GamePanel에 내 직업 정보 설정
+                if (gamePanel != null) {
+                    gamePanel.setMyRole(roleName, faction);
+                }
+                
+                // 2. 사용자에게 직업 알림
                 JOptionPane.showMessageDialog(this, 
                     "당신의 직업은 [" + roleName + "]이며, 진영은 [" + faction + "]입니다.", 
-                    "직업 배정 완료", 
+                    "게임 시작", 
                     JOptionPane.INFORMATION_MESSAGE);
                     
-                // 2. GamePanel로 전환
+                // 3. 화면 전환
                 changePanel(GAME_PANEL); 
             }
+            // 이번 판 등장 직업 목록 수신 처리
             else if (message.startsWith(Protocol.CMD_GAME_ROLES)) {
                 String rolesStr = message.substring(Protocol.CMD_GAME_ROLES.length() + 1).trim();
                 String[] roles = rolesStr.split(",");
                 
-
-                gamePanel.updateRoleBook(roles);
+                if (gamePanel != null) {
+                    gamePanel.updateRoleBook(roles);
+                }
             }
             // === 채팅 처리 ===
+            // 채팅 및 시스템 메시지 처리 (나머지는 EnterGamePanel의 채팅창으로 보냄)
             else {
-                // 현재는 일단 대기방 채팅창에만 출력 
                 waitingPanel.appendMessage(message);
-                gamePanel.appendMessage(message); // 게임방 채팅창에도 추가
+                if (gamePanel != null) {
+                    gamePanel.appendMessage(message);
+                }
             }
         });
     }
