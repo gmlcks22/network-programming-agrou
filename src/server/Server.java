@@ -45,7 +45,6 @@ public class Server {
     }
 
     // 접속자 명단에서 제거
-    // todo 접속 끊길 때 접속자 명단에서 제거.
     public static synchronized void removeClient(ClientHandler client) {
         allClients.remove(client);
     }

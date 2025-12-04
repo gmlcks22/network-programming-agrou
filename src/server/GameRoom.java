@@ -59,9 +59,16 @@ public class GameRoom {
 
     public synchronized void removeClient(ClientHandler handler) {
         clientsInRoom.remove(handler);
-        handler.setCurrentRoom(null);
-        broadcastMessage("[System] '" + handler.getNickname() + "' 님이 방을 나갔습니다.");
-        broadcastUserList();
+        handler.setCurrentRoom(null); // 클라이언트의 소속 방 정보를 null로
+
+        if (clientsInRoom.isEmpty()) {
+            // 1. 남은 사람이 없으면 방 폭파 (RoomManager에게 삭제 요청)
+            Server.ROOM_MANAGER.removeRoom(this);
+        } else {
+            // 2. 사람이 남아있으면 퇴장 알림 및 목록 갱신
+            broadcastMessage("[System] '" + handler.getNickname() + "' 님이 방을 나갔습니다.");
+            broadcastUserList();
+        }
     }
     
     // --- 게임 시작 요청 (ClientHandler가 호출) ---

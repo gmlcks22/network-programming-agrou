@@ -35,6 +35,13 @@ public class RoomManager {
         return false;
     }
 
+    // [추가] 방 삭제 메소드
+    public synchronized void removeRoom(GameRoom room) {
+        gameRooms.remove(room);
+        System.out.println("[Server] 방 삭제됨: " + room.getRoomName());
+    }
+
+    // 방 목록 보기: 현재 방 목록을 콤마(,)로 구분된 문자열로 반환
     public String getRoomListString() {
         StringBuilder sb = new StringBuilder();
         for (GameRoom room : gameRooms) {
