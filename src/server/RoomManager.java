@@ -29,11 +29,11 @@ public class RoomManager {
         for (GameRoom room : gameRooms) {
             if (room.getRoomName().equals(roomName)) {
 
-                // ★ [추가] 입장 조건 검사
+                // 입장 조건 검사
                 if (room.isPlaying()) {
                     joiner.sendMessage(Protocol.RESP_JOIN_FAIL + " 이미 게임이 진행 중입니다.");
                     return true; // (메시지 처리했으므로 true 반환하여 ClientHandler의 에러 중복 방지)
-                }   
+                }
                 if (room.isFull()) {
                     joiner.sendMessage(Protocol.RESP_JOIN_FAIL + " 방이 꽉 찼습니다.");
                     return true;

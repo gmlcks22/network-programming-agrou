@@ -68,6 +68,22 @@ public class GameRoom {
         return nightActions;
     }
 
+    public boolean isPlaying() {
+        return isPlaying;
+    }
+
+    public boolean isFull() {
+        return clientsInRoom.size() >= maxPopulation;
+    }
+
+    public int getMaxPopulation() {
+        return maxPopulation;
+    }
+
+    public int getCurrentPopulation() {
+        return clientsInRoom.size();
+    }
+
     // --- 클라이언트 관리 ---
     public synchronized void addClient(ClientHandler handler) {
         if (handler.getCurrentRoom() != null) {
