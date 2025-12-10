@@ -160,4 +160,10 @@ public class GameRoom {
             client.sendMessage(msg);
         }
     }
+
+    public String getRoomInfoString() {
+        String state = isPlaying ? "[진행중]" : "[대기중]";
+        // 예: "1번방 (3/4) [대기중]"
+        return String.format("%s (%d/%d) %s", roomName, clientsInRoom.size(), maxPopulation, state);
+    }
 }
