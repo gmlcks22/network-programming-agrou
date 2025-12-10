@@ -14,7 +14,7 @@ public class RoomManager {
     }
 
     public synchronized void createRoom(String roomName, String customRoleConfig, ClientHandler creator) {
-        
+
         // 전달받은 역할 설정으로 방 생성
         GameRoom newRoom = new GameRoom(roomName, customRoleConfig);
         gameRooms.add(newRoom);
@@ -22,12 +22,23 @@ public class RoomManager {
         // 방장 입장 처리
         newRoom.addClient(creator);
         creator.sendMessage("[System] " + roomName + " 방이 생성되었습니다. (방장 자동 입장)");
-        creator.sendMessage(Protocol.RESP_CREATE_OK); 
+        creator.sendMessage(Protocol.RESP_CREATE_OK);
     }
 
     public synchronized boolean joinRoom(String roomName, ClientHandler joiner) {
         for (GameRoom room : gameRooms) {
             if (room.getRoomName().equals(roomName)) {
+
+                // ★ [추가] 입장 조건 검사
+                if (room.isPlaying()) {
+                    joiner.sendMessage(Protocol.RESP_JOIN_FAIL + " 이미 게임이 진행 중입니다.");
+                    return true; // (메시지 처리했으므로 true 반환하여 ClientHandler의 에러 중복 방지)
+                }   
+                if (room.isFull()) {
+                    joiner.sendMessage(Protocol.RESP_JOIN_FAIL + " 방이 꽉 찼습니다.");
+                    return true;
+                }
+
                 room.addClient(joiner);
                 return true;
             }
@@ -45,7 +56,8 @@ public class RoomManager {
     public String getRoomListString() {
         StringBuilder sb = new StringBuilder();
         for (GameRoom room : gameRooms) {
-            sb.append(room.getRoomName()).append(",");
+            // 구분자 컴마(,) 사용. 방 이름 자체에 컴마가 없다고 가정.
+            sb.append(room.getRoomInfoString()).append(",");
         }
         return sb.toString();
     }

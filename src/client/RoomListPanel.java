@@ -1,15 +1,15 @@
 package client;
 
 import common.Protocol;
-
-import javax.swing.*;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.io.IOException;
 import java.io.PrintWriter;
+import javax.swing.*;
 
 public class RoomListPanel extends JPanel {
+
     private MainFrame mainFrame;
     private JList<String> roomList;
     private DefaultListModel<String> roomListModel;
@@ -89,11 +89,16 @@ public class RoomListPanel extends JPanel {
             return;
         }
 
-        String roomName = selected.trim();
+        String roomName = selected;
+        int idx = selected.lastIndexOf(" (");
+        if (idx != -1) {
+            roomName = selected.substring(0, idx);
+        }
+        roomName = roomName.trim();
 
         try {
             PrintWriter out = new PrintWriter(mainFrame.getSocket().getOutputStream(), true);
-            out.println(Protocol.CMD_JOIN + " " + roomName);    // 서버로 "/join 방이름" wjsthd
+            out.println(Protocol.CMD_JOIN + " " + roomName);
         } catch (IOException ex) {
             ex.printStackTrace();
         }
@@ -103,7 +108,7 @@ public class RoomListPanel extends JPanel {
     public void updateRoomList(String[] rooms) {
         roomListModel.clear();
         for (String room : rooms) {
-            if(!room.isEmpty()) {
+            if (!room.isEmpty()) {
                 roomListModel.addElement(room);
             }
         }

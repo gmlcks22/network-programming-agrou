@@ -121,9 +121,8 @@ public class MainFrame extends JFrame {
                 if (message.length() > Protocol.RESP_JOIN_FAIL.length()) {
                     reason = message.substring(Protocol.RESP_JOIN_FAIL.length() + 1);
                 }
-                JOptionPane.showMessageDialog(this, "입장 실패: " + message.substring(11));
-            }
-            // === 대기방 관련 처리 ===
+                JOptionPane.showMessageDialog(this, "입장 실패: " + reason);
+            } // === 대기방 관련 처리 ===
             // 1. 유저 목록 업데이트 처리 (/userlist 닉1 닉2 ...)
             else if (message.startsWith(Protocol.CMD_USERLIST)) {
                 String userListString = message.substring(10).trim();
