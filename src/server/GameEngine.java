@@ -203,7 +203,7 @@ public class GameEngine {
     }
 
     // 엔진 정지 메소드
-    private void stopEngine() {
+    protected void stopEngine() {
         if (gameTimer != null) {
             gameTimer.cancel(); // 타이머 취소
             gameTimer = null;

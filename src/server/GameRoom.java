@@ -114,6 +114,15 @@ public class GameRoom {
             // 2. 사람이 남아있으면 퇴장 알림 및 목록 갱신
             broadcastMessage("[System] '" + handler.getNickname() + "' 님이 방을 나갔습니다.");
             broadcastUserList();
+
+            if (isPlaying) {
+                // 나간 사람을 사망 처리한 것으로 간주하고 승리 조건 체크
+                // (혹은 단순히 인원수 변동에 따른 승리 체크)
+                boolean isGameEnded = checkWinCondition();
+                if (isGameEnded && gameEngine != null) {
+                    gameEngine.stopEngine();
+                }
+            }
         }
     }
 

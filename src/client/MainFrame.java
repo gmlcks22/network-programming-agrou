@@ -175,6 +175,35 @@ public class MainFrame extends JFrame {
                     gamePanel.updateRoleBook(roles);
                 }
             }
+            // 게임 페이즈 단계 및 타이머 수신
+            else if (message.startsWith(Protocol.CMD_PHASE)) {
+                try {
+                    // 메시지 앞뒤 공백 제거 후 분리
+                    String[] parts = message.trim().split(" ");
+                    // 예상 포lo맷: "/phase DAY_DISCUSSION 60"
+
+                    if (parts.length >= 3) {
+                        String phase = parts[1];
+                        int time = Integer.parseInt(parts[2]); // 여기서 숫자 변환 시도
+
+                        if (gamePanel != null) {
+                            gamePanel.updatePhase(phase, time);
+                        }
+                    }
+                } catch (NumberFormatException e) {
+                    System.err.println("[클라이언트 오류] 시간 파싱 실패: " + message);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+            // 게임 종료 수신
+            else if (message.startsWith(Protocol.CMD_GAMEOVER)) {
+                String resultMsg = message.substring(Protocol.CMD_GAMEOVER.length() + 1).trim();
+                JOptionPane.showMessageDialog(this, resultMsg);
+
+                // todo 게임 종료 페이지 추가? 일단 로비로 이동
+                changePanel(LOBBY_PANEL);
+            }
             // === 채팅 처리 ===
             // 채팅 및 시스템 메시지 처리 (나머지는 EnterGamePanel의 채팅창으로 보냄)
             else {

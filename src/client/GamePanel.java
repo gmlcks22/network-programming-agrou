@@ -29,9 +29,16 @@ public class GamePanel extends JPanel {
     private JTextArea chatArea;
     private JTextField chatField;
     private JScrollPane chatScrollPane;
-    private JPanel roleBookPanel; 
+    private JPanel roleBookPanel;
 
     private JPanel targetSelectionPanel;
+
+    private JLabel timerLabel;      // 남은 시간 표시
+    private JLabel phaseLabel;      // 현재 단계 표시 (낮/밤)
+    private Timer clientTimer;      // 클라이언트 측 카운트다운용
+    private int remainingTime;      // 남은 시간(초)
+    private String currentPhase;    // 현재 단계
+    private JPanel playerGridPanel;
 
     // 데이터
     private String myRoleName = "시민";
@@ -68,6 +75,7 @@ public class GamePanel extends JPanel {
         topPanel.setBackground(new Color(230, 230, 240));
         topPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
 
+        // 1. 좌측: 내 직업 정보
         JPanel myRolePanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
         myRolePanel.setOpaque(false);
         
@@ -83,12 +91,33 @@ public class GamePanel extends JPanel {
         myRolePanel.add(myRoleNameLabel);
         topPanel.add(myRolePanel, BorderLayout.WEST);
 
+        // 2. 중앙: 타이머 및 단계 표시
+        JPanel statusPanel = new JPanel(new GridLayout(2, 1));
+        statusPanel.setOpaque(false);
+
+        phaseLabel = new JLabel("게임 대기 중");
+        phaseLabel.setFont(new Font("맑은 고딕", Font.BOLD, 18));
+        phaseLabel.setHorizontalAlignment(SwingConstants.CENTER);
+
+        timerLabel = new JLabel("-");
+        timerLabel.setFont(new Font("맑은 고딕", Font.BOLD, 18));
+        timerLabel.setForeground(new Color(200, 50, 50));
+        timerLabel.setHorizontalAlignment(SwingConstants.CENTER);
+
+        statusPanel.add(phaseLabel);
+        statusPanel.add(timerLabel);
+        topPanel.add(statusPanel, BorderLayout.CENTER);
+
+        // 3. 우측: 생존자 수
         survivorCountLabel = new JLabel("생존자: " + survivorCount + "명");
         survivorCountLabel.setFont(new Font("맑은 고딕", Font.BOLD, 20));
         survivorCountLabel.setHorizontalAlignment(SwingConstants.CENTER);
+        JPanel rightInfoPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+        rightInfoPanel.setOpaque(false);
+        rightInfoPanel.add(survivorCountLabel);
+
         topPanel.add(survivorCountLabel, BorderLayout.CENTER);
-        
-        topPanel.add(Box.createRigidArea(new Dimension(100, 50)), BorderLayout.EAST);
+        //topPanel.add(Box.createRigidArea(new Dimension(100, 50)), BorderLayout.EAST);
 
         add(topPanel, BorderLayout.NORTH);
     }
@@ -98,10 +127,17 @@ public class GamePanel extends JPanel {
         centerDisplayPanel.setOpaque(false);
         centerDisplayPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
 
-        JPanel defaultPanel = new JPanel();
-        defaultPanel.setOpaque(false);
-        centerDisplayPanel.add(defaultPanel, "DEFAULT");
+        // 1. 플레이어 그리드 패널
+        playerGridPanel = new JPanel(new GridLayout(0, 4, 15, 15));
+        playerGridPanel.setOpaque(false);
 
+        centerDisplayPanel.add(playerGridPanel, "DEFAULT");
+
+//        JPanel defaultPanel = new JPanel();
+//        defaultPanel.setOpaque(false);
+//        centerDisplayPanel.add(defaultPanel, "DEFAULT");
+
+        // 2. 직업 설명 패널
         JPanel descriptionPanel = new JPanel(new BorderLayout());
         descriptionPanel.setBackground(new Color(255, 255, 240));
         descriptionPanel.setBorder(BorderFactory.createTitledBorder(
@@ -223,7 +259,87 @@ public class GamePanel extends JPanel {
 
     public void updateUserList(String[] users) {
         this.survivorCount = users.length;
-        survivorCountLabel.setText("생존자: " + survivorCount + "명");
+        if  (survivorCountLabel != null) {
+            survivorCountLabel.setText("생존자: " + survivorCount + "명");
+        }
+
+        // 중앙 패널에 플레이어 버튼 생성
+        if (playerGridPanel != null) {
+            playerGridPanel.removeAll();    // 기존 버튼 제거
+
+            for (String nickname : users) {
+                if (nickname.isEmpty()) continue;
+
+                JButton playerBtn = new JButton(nickname);
+                playerBtn.setFont(new Font("맑은 고딕", Font.BOLD, 16));
+                playerBtn.setBackground(new Color(220, 230, 255)); // 기본 색상
+                playerBtn.setPreferredSize(new Dimension(100, 100));
+                playerBtn.setFocusPainted(false);
+
+                // 버튼 클릭 시 투표/능력 사용 메소드 호출
+                playerBtn.addActionListener(e -> handlePlayerClick(nickname));
+
+                playerGridPanel.add(playerBtn);
+            }
+        }
+    }
+
+    // 서버로부터 받은 단계 및 시간 업데이트
+    public void updatePhase(String phase, int time) {
+        this.currentPhase = phase;
+        this.remainingTime = time;
+
+        // 단계별 한글 명칭 변환
+        String phaseText = "";
+        switch(phase) {
+            case "DAY_DISCUSSION": phaseText = "낮 (토론)"; break;
+            case "DAY_VOTE":       phaseText = "낮 (투표)"; break;
+            case "NIGHT_ACTION":   phaseText = "밤 (행동)"; break;
+            default:               phaseText = phase;
+        }
+
+        if (phaseLabel != null) phaseLabel.setText(phaseText);
+
+        // 기존 타이머 중지 후 새로 시작 (1초마다 감소)
+        if (clientTimer != null) clientTimer.stop();
+
+        clientTimer = new Timer(1000, e -> {
+            if (remainingTime > 0) {
+                remainingTime--;
+                if (timerLabel != null) timerLabel.setText(remainingTime + "초");
+            } else {
+                ((Timer)e.getSource()).stop();
+            }
+        });
+        clientTimer.start();
+        if (timerLabel != null) timerLabel.setText(time + "초"); // 즉시 표시
+    }
+
+    // 플레이어 버튼 클릭 시 처리 (투표/능력 전송)
+    private void handlePlayerClick(String targetName) {
+        try {
+            if (mainFrame.getSocket() == null) return;
+
+            PrintWriter out = new PrintWriter(mainFrame.getSocket().getOutputStream(), true);
+
+            // 현재 단계에 따라 다른 명령어 전송
+            if ("DAY_VOTE".equals(currentPhase)) {
+                // 낮 투표 시간 -> /vote 전송
+                out.println(Protocol.CMD_VOTE + " " + targetName);
+                appendMessage("[시스템] '" + targetName + "' 님에게 투표했습니다.");
+            }
+            else if ("NIGHT_ACTION".equals(currentPhase)) {
+                // 밤 행동 시간 -> /nightvote 전송
+                // (시민은 서버에서 걸러지므로 일단 전송)
+                out.println(Protocol.CMD_NIGHT_ACTION + " " + targetName);
+                // appendMessage("[시스템] '" + targetName + "' 님을 대상으로 선택했습니다.");
+            }
+            else {
+                JOptionPane.showMessageDialog(this, "지금은 대상을 선택할 수 없습니다.");
+            }
+        } catch (IOException ex) {
+            ex.printStackTrace();
+        }
     }
 
     public void appendMessage(String msg) {
