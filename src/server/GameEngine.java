@@ -106,6 +106,9 @@ public class GameEngine {
 
     // 다음 단계로 이동하는 로직 (순환 구조)
     private void nextPhase() {
+        // 이미 게임이 끝난 상태면 아무것도 하지 않음
+        if (currentPhase == GamePhase.ENDED) return;
+
         switch (currentPhase) {
             case DAY_DISCUSSION:
                 startPhase(GamePhase.DAY_VOTE);
@@ -113,9 +116,6 @@ public class GameEngine {
             case DAY_VOTE:
                 processVotingResult();
                 // 게임이 안 끝났으면 밤으로
-                if (currentPhase != GamePhase.ENDED) {
-                    startPhase(GamePhase.NIGHT_ACTION);
-                }
                 break;
             case NIGHT_ACTION:
                 processNight();
@@ -127,13 +127,16 @@ public class GameEngine {
         }
     }
 
-    // todo 낮 투표 결과 집계 (추후 구현 필요)
+    // 낮 투표 결과 처리
     private void processVotingResult() {
         room.broadcastMessage("[System] 투표 시간이 종료되었습니다. (집계 로직 미구현으로 넘어갑니다)");
-        // TODO: GameRoom의 voteMap을 확인하여 최다 득표자 처형
-        // 투표 집계
-        room.processDayVoting();
-        //room.getDayVotes().clear();
+        boolean isGameEnded = room.processDayVoting();
+
+        if (isGameEnded) {
+            stopEngine();   // 타이머 완전 정지
+        } else {
+            startPhase(GamePhase.NIGHT_ACTION);
+        }
     }
 
     // 밤 결과 처리 (늑대, 경비병, 선견자)
@@ -158,21 +161,22 @@ public class GameEngine {
         // 1. 늑대 살해 로직
         if (wolfTarget != null) {
             if (wolfTarget.equals(guardTarget)) {
-                // 경비병이 막음
-                room.broadcastMessage("[System] 간밤에 경비병이 누군가를 지켜냈습니다!");
+                room.broadcastMessage("[System] 간밤에 경비병이 누군가를 지켜냈습니다!");    // 경비병이 막음
             } else {
-                // 살해 성공
-                deathList.add(wolfTarget);
-                // todo 실제 유저 사망 처리 (room.killUser(wolfTarget))
+                deathList.add(wolfTarget); // 살해 성공
             }
         } else {
             room.broadcastMessage("[System] 간밤에 아무 일도 일어나지 않았습니다.");
         }
 
-        // 2. 사망자 명단 발표
+        // 2. 사망자 처리 및 승리 조건 확인
+        boolean isGameEnded = false;
+
         for (String deadUser : deathList) {
             room.broadcastMessage("[System] 비극적이게도 '" + deadUser + "' 님이 처참하게 살해당했습니다.");
-            // room.killUser(deadUser); // todo 실제 사망 처리 메소드 필요
+            if (room.killUser(deadUser)) {
+                isGameEnded = true; // 게임 끝
+            }
         }
 
         // 3. 선견자 로직 (개별 전송)
@@ -193,6 +197,19 @@ public class GameEngine {
 
         // 행동 기록 초기화
         room.getNightActions().clear();
+
+        // 밤에 누군가 죽어서 게임이 끝났다면 엔진 정지
+        if (isGameEnded) { stopEngine(); }
+    }
+
+    // 엔진 정지 메소드
+    private void stopEngine() {
+        if (gameTimer != null) {
+            gameTimer.cancel(); // 타이머 취소
+            gameTimer = null;
+        }
+        this.currentPhase = GamePhase.ENDED; // 상태를 '종료'로 변경
+        System.out.println("[GameEngine] 게임이 종료되어 엔진을 정지합니다.");
     }
 
     // 닉네임으로 클라이언트 찾기 헬퍼

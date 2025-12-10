@@ -152,10 +152,12 @@ public class GameRoom {
     }
 
     // 2. 투표 결과 집계 및 처형 (GameEngine이 투표 시간 종료 시 호출)
-    public void processDayVoting() {
+    public boolean processDayVoting() {
+        boolean isGameEnded = false;    // 게임 종료 여부 플래그
+
         if (dayVotes.isEmpty()) {
             broadcastMessage("[System] 투표가 없어 아무도 처형되지 않았습니다.");
-            return;
+            return false;
         }
 
         // 득표수 계산
@@ -181,30 +183,30 @@ public class GameRoom {
         }
 
         // 결과 처리
-        if (isTie) {
+        if (maxTarget != null && !isTie) {
+            broadcastMessage("[System] 투표 결과, '" + maxTarget + "' 님이 최다 득표로 처형됩니다.");
+            isGameEnded = killUser(maxTarget);
+        } else {
             broadcastMessage("[System] 동점표가 발생하여 아무도 처형되지 않았습니다.");
-        } else if (maxTarget != null) {
-            broadcastMessage("[System] 투표 결과, '" + maxTarget + "' 님이 최다 득표(" + maxVotes + "표)로 처형됩니다.");
-            killUser(maxTarget); // 처형!
         }
 
         // 투표함 초기화
         dayVotes.clear();
+        return isGameEnded;
     }
 
     // 3. 유저 사망 처리
-    public void killUser(String targetNickname) {
+    public boolean killUser(String targetNickname) {
         ClientHandler victim = findClientByNickname(targetNickname);
         if (victim != null && !victim.isDead()) {
-            victim.setDead(true); // 사망 처리
-            victim.sendMessage("[System] 당신은 사망했습니다. 더 이상 채팅과 투표를 할 수 없습니다.");
-            broadcastMessage("[System] ---------------------------------");
+            victim.setDead(true);
+            victim.sendMessage("[System] 당신은 사망했습니다...");
             broadcastMessage("[System] " + targetNickname + " 님이 사망했습니다.");
-            broadcastMessage("[System] ---------------------------------");
 
-            // 누군가 죽었으니 승리 조건 체크
-            checkWinCondition();
+            // 여기서 승리 조건을 체크하고, 그 결과를 바로 return.
+            return checkWinCondition();
         }
+        return false; // 아무도 안 죽었거나 에러면 게임 안 끝남
     }
 
     // 4. 승리 조건 판단 (GameEngine이나 killUser에서 호출)
