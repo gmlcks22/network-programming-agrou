@@ -2,6 +2,8 @@ package client;
 
 import common.Protocol;
 import java.awt.*;
+import java.awt.event.ComponentAdapter;
+import java.awt.event.ComponentEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.io.IOException;
@@ -69,6 +71,13 @@ public class RoomListPanel extends JPanel {
         refreshButton.addActionListener(e -> requestRoomList());    // 서버에 방 목록 요청
         joinButton.addActionListener(e -> requestJoin());           // 선택된 방으로 입장 요청
         backButton.addActionListener(e -> mainFrame.changePanel(MainFrame.LOBBY_PANEL));    // 메인 로비로
+        this.addComponentListener(new ComponentAdapter() {
+            @Override
+            public void componentShown(ComponentEvent e) {
+                requestRoomList(); // 방 목록 요청
+                System.out.println("[Client] 방 목록 화면 진입 - 자동 새로고침");
+            }
+        });
     }
 
     // 서버에 방 목록 요청
