@@ -5,6 +5,7 @@ public class Protocol {
     public static final String CMD_CREATE = "/create";
     public static final String CMD_JOIN = "/join";
     public static final String CMD_CHAT = "/chat";
+    public static final String CMD_MAFIA_CHAT = "/mafia";
     public static final String CMD_LEAVE = "/leave";
     public static final String CMD_START = "/start";
     public static final String CMD_NIGHT_ACTION = "/nightvote";

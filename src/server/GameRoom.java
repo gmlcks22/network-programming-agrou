@@ -100,7 +100,15 @@ public class GameRoom {
             client.sendMessage(message);
         }
     }
-
+    public void broadcastMafiaMessage(String message) {
+            System.out.println("'" + roomName + "' (마피아챗): " + message);
+            for (ClientHandler client : clientsInRoom) {
+                // 역할이 있고, 진영이 Mafia인 사람에게만 전송
+                if (client.getRole() != null && "Mafia".equals(client.getRole().getFaction())) {
+                    client.sendMessage(message);
+                }
+            }
+    }
     public void broadcastUserList() {
         StringBuilder list = new StringBuilder(Protocol.CMD_USERLIST);
         for (ClientHandler client : clientsInRoom) {

@@ -94,14 +94,45 @@ public class ClientHandler implements Runnable {
                     }
 
                 } else if (message.startsWith(Protocol.CMD_CHAT)) {
+                    // 1. 사망자 채팅 금지
+                    if (isDead) {
+                        sendMessage("[System] 사망자는 채팅할 수 없습니다.");
+                        continue;
+                    }
+
                     String chatMsg = message.substring(6);
                     if (currentRoom != null) {
-                        // 4. (핵심) 내가 속한 방(currentRoom)에 메시지 전파를 "요청"
-                        currentRoom.broadcastMessage(nickname + ": " + chatMsg);
+                        // 2. 밤/낮 체크
+                        if (currentRoom.isNight()) {
+                            // ★ 밤에는 마피아만 채팅 가능
+                            if (role != null && "Mafia".equals(role.getFaction())) {
+                                currentRoom.broadcastMafiaMessage("[마피아] " + nickname + ": " + chatMsg);
+                            } else {
+                                sendMessage("[System] 밤에는 채팅을 할 수 없습니다.");
+                            }
+                        } else {
+                            // 낮에는 모두 채팅 가능
+                            currentRoom.broadcastMessage(nickname + ": " + chatMsg);
+                        }
                     } else {
                         sendMessage("[System] 방에 먼저 참여해야 합니다.");
                     }
-                } else if (message.startsWith(Protocol.CMD_LEAVE)) {
+                } else if (message.startsWith(Protocol.CMD_MAFIA_CHAT)) {
+                    if (isDead) {
+                        sendMessage("[System] 사망자는 채팅할 수 없습니다.");
+                        continue;
+                    }
+                    
+                    // 마피아인지 확인
+                    if (role != null && "Mafia".equals(role.getFaction())) {
+                        String chatMsg = message.substring(Protocol.CMD_MAFIA_CHAT.length() + 1);
+                        if (currentRoom != null) {
+                            currentRoom.broadcastMafiaMessage("[마피아] " + nickname + ": " + chatMsg);
+                        }
+                    } else {
+                        sendMessage("[System] 마피아 채팅을 사용할 수 없습니다.");
+                    }
+                }else if (message.startsWith(Protocol.CMD_LEAVE)) {
                     if (currentRoom != null) {
                         currentRoom.removeClient(this); // 방에서 제거, 안내방송, 유저목록
                     }
