@@ -34,17 +34,13 @@ public class GamePanel extends JPanel {
     private JTextArea chatArea;
     private JTextField chatField;
     private JButton chatSendButton;
-    // ★ [추가] 채팅 모드 선택 콤보박스
     private JComboBox<String> chatModeCombo; 
     
     private JScrollPane chatScrollPane;
     private JPanel roleBookPanel; 
 
     private JPanel targetSelectionPanel;
-<<<<<<< Updated upstream
-=======
     private JPanel playerGridPanel; 
->>>>>>> Stashed changes
 
     // 데이터
     private String myRoleName = "시민";
@@ -85,10 +81,7 @@ public class GamePanel extends JPanel {
         topPanel.setBackground(new Color(230, 230, 240));
         topPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
 
-<<<<<<< Updated upstream
-=======
         // 1. 좌측 (WEST)
->>>>>>> Stashed changes
         JPanel myRolePanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
         myRolePanel.setOpaque(false);
         myRoleImageLabel = new JLabel();
@@ -101,14 +94,6 @@ public class GamePanel extends JPanel {
         myRolePanel.add(myRoleNameLabel);
         topPanel.add(myRolePanel, BorderLayout.WEST);
 
-<<<<<<< Updated upstream
-        survivorCountLabel = new JLabel("생존자: " + survivorCount + "명");
-        survivorCountLabel.setFont(new Font("맑은 고딕", Font.BOLD, 20));
-        survivorCountLabel.setHorizontalAlignment(SwingConstants.CENTER);
-        topPanel.add(survivorCountLabel, BorderLayout.CENTER);
-        
-        topPanel.add(Box.createRigidArea(new Dimension(100, 50)), BorderLayout.EAST);
-=======
         // 2. 중앙: 타이머 및 단계 표시 (CENTER)
         JPanel statusPanel = new JPanel(new GridLayout(2, 1));
         statusPanel.setOpaque(false);
@@ -132,7 +117,6 @@ public class GamePanel extends JPanel {
         rightInfoPanel.add(survivorCountLabel);
         
         topPanel.add(rightInfoPanel, BorderLayout.EAST);
->>>>>>> Stashed changes
 
         add(topPanel, BorderLayout.NORTH);
     }
@@ -142,19 +126,12 @@ public class GamePanel extends JPanel {
         centerDisplayPanel.setOpaque(false);
         centerDisplayPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
 
-<<<<<<< Updated upstream
-        JPanel defaultPanel = new JPanel();
-        defaultPanel.setOpaque(false);
-        centerDisplayPanel.add(defaultPanel, "DEFAULT");
-
-=======
         // 1. 플레이어 그리드 패널
         playerGridPanel = new JPanel(new GridLayout(0, 4, 15, 15));
         playerGridPanel.setOpaque(false);
         centerDisplayPanel.add(playerGridPanel, "DEFAULT");
 
         // 2. 직업 설명 패널
->>>>>>> Stashed changes
         JPanel descriptionPanel = new JPanel(new BorderLayout());
         descriptionPanel.setBackground(new Color(255, 255, 240));
         descriptionPanel.setBorder(BorderFactory.createTitledBorder(
@@ -212,7 +189,7 @@ public class GamePanel extends JPanel {
 
         JPanel inputPanel = new JPanel(new BorderLayout());
         
-        // ★ [추가] 채팅 모드 선택 콤보박스 (마피아용)
+        // 채팅 모드 선택 콤보박스 (마피아용)
         chatModeCombo = new JComboBox<>(new String[]{"전체", "마피아"});
         chatModeCombo.setPreferredSize(new Dimension(70, 25));
         chatModeCombo.setVisible(false); // 기본 숨김
@@ -279,7 +256,7 @@ public class GamePanel extends JPanel {
             phaseLabel.setText("🌙 밤 (능력 사용)");
             phaseLabel.setForeground(new Color(0, 0, 100)); 
             
-            // ★ 밤 채팅 로직: 마피아는 '마피아 채팅'으로 강제 전환
+            // 밤 채팅 로직: 마피아는 '마피아 채팅'으로 강제 전환
             if ("Mafia".equals(myFaction)) {
                 canChat = true;
                 chatModeCombo.setSelectedItem("마피아");
@@ -364,7 +341,7 @@ public class GamePanel extends JPanel {
         if (icon != null) myRoleImageLabel.setIcon(icon);
         else myRoleImageLabel.setText(roleName.substring(0, 1));
         
-        // ★ 마피아 진영 확인 및 UI 업데이트
+        // 마피아 진영 확인 및 UI 업데이트
         if ("Mafia".equals(faction)) {
             chatModeCombo.setVisible(true); // 마피아 채팅 옵션 보이기
             chatModeCombo.setSelectedIndex(0); // 기본은 전체
@@ -373,7 +350,7 @@ public class GamePanel extends JPanel {
         }
     }
 
-    // ★ [수정] 메시지 전송 로직 (모드 확인)
+    // 메시지 전송 로직 (모드 확인)
     private void sendChatMessage() {
         String msg = chatField.getText();
         if (!msg.isEmpty()) {
@@ -400,9 +377,6 @@ public class GamePanel extends JPanel {
 
     public void updateUserList(String[] users) {
         this.survivorCount = users.length;
-<<<<<<< Updated upstream
-        survivorCountLabel.setText("생존자: " + survivorCount + "명");
-=======
         if  (survivorCountLabel != null) {
             survivorCountLabel.setText("생존자: " + survivorCount + "명");
         }
@@ -436,7 +410,6 @@ public class GamePanel extends JPanel {
         }
         targetSelectionPanel.revalidate();
         targetSelectionPanel.repaint();
->>>>>>> Stashed changes
     }
 
     public void appendMessage(String msg) {

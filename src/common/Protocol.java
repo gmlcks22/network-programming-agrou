@@ -11,6 +11,10 @@ public class Protocol {
     public static final String CMD_NIGHT_ACTION = "/nightvote";
     public static final String CMD_ROLE_ASSIGN = "/roleassign";
     public static final String CMD_GAME_ROLES = "/gameroles";
+    public static final String CMD_PHASE = "/phase";
+    public static final String CMD_VOTE = "/vote";          // "/vote 닉네임"
+    public static final String CMD_GAMEOVER = "/gameover";  // 게임 종료 알림
+
     // 서버 -> 클라이언트 응답
     public static final String RESP_JOIN_OK = "join_ok";
     public static final String RESP_CREATE_OK = "create_ok";

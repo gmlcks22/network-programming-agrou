@@ -1,15 +1,17 @@
 package client;
 
 import common.Protocol;
-
-import javax.swing.*;
 import java.awt.*;
+import java.awt.event.ComponentAdapter;
+import java.awt.event.ComponentEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.io.IOException;
 import java.io.PrintWriter;
+import javax.swing.*;
 
 public class RoomListPanel extends JPanel {
+
     private MainFrame mainFrame;
     private JList<String> roomList;
     private DefaultListModel<String> roomListModel;
@@ -69,6 +71,13 @@ public class RoomListPanel extends JPanel {
         refreshButton.addActionListener(e -> requestRoomList());    // 서버에 방 목록 요청
         joinButton.addActionListener(e -> requestJoin());           // 선택된 방으로 입장 요청
         backButton.addActionListener(e -> mainFrame.changePanel(MainFrame.LOBBY_PANEL));    // 메인 로비로
+        this.addComponentListener(new ComponentAdapter() {
+            @Override
+            public void componentShown(ComponentEvent e) {
+                requestRoomList(); // 방 목록 요청
+                System.out.println("[Client] 방 목록 화면 진입 - 자동 새로고침");
+            }
+        });
     }
 
     // 서버에 방 목록 요청
@@ -89,11 +98,16 @@ public class RoomListPanel extends JPanel {
             return;
         }
 
-        String roomName = selected.trim();
+        String roomName = selected;
+        int idx = selected.lastIndexOf(" (");
+        if (idx != -1) {
+            roomName = selected.substring(0, idx);
+        }
+        roomName = roomName.trim();
 
         try {
             PrintWriter out = new PrintWriter(mainFrame.getSocket().getOutputStream(), true);
-            out.println(Protocol.CMD_JOIN + " " + roomName);    // 서버로 "/join 방이름" wjsthd
+            out.println(Protocol.CMD_JOIN + " " + roomName);
         } catch (IOException ex) {
             ex.printStackTrace();
         }
@@ -103,7 +117,7 @@ public class RoomListPanel extends JPanel {
     public void updateRoomList(String[] rooms) {
         roomListModel.clear();
         for (String room : rooms) {
-            if(!room.isEmpty()) {
+            if (!room.isEmpty()) {
                 roomListModel.addElement(room);
             }
         }

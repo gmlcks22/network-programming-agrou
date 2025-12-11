@@ -12,8 +12,8 @@ public class ClientHandler implements Runnable {
     private PrintWriter out;    // 클라이언트에게 메시지 송신
     private String nickname;
     private GameRoom currentRoom = null; // 내가 현재 속한 방
-
     private Role role;
+    private boolean isDead = false; // 생존 여부
 
     public ClientHandler(Socket socket) {
         try {
@@ -40,6 +40,9 @@ public class ClientHandler implements Runnable {
     public Role getRole() { return role; }
     public String getRoleName() { return role != null ? role.getName() : "None"; }
     public String getFaction() { return role != null ? role.getFaction() : "None"; }
+
+    public boolean isDead() { return isDead; }
+    public void setDead(boolean isDead) { this.isDead = isDead; }
 
     @Override
     public void run() {
@@ -140,7 +143,7 @@ public class ClientHandler implements Runnable {
                 } else if (message.equals(Protocol.CMD_ROOMLIST)) {
                     String roomListStr = Server.ROOM_MANAGER.getRoomListString();
                     sendMessage(Protocol.CMD_ROOMLIST + " " + roomListStr); // "/roomlist 방1,방2" 전송
-                }else if (message.equals(Protocol.CMD_START)) { // 게임 시작 명령 처리 확인
+                } else if (message.equals(Protocol.CMD_START)) { // 게임 시작 명령 처리 확인
                      if (currentRoom != null) {
                         currentRoom.startGameRequest(this);
                      } else {
@@ -169,6 +172,19 @@ public class ClientHandler implements Runnable {
                     String response = role.useNightAbility(targetNickname, currentRoom);
 
                     sendMessage("[System] " + response); // 능력 사용 성공 응답
+                }
+                else if (message.startsWith(Protocol.CMD_VOTE)) {
+                    // 죽은 사람은 투표 불가
+                    if (isDead) {
+                        sendMessage("[System] 사망자는 투표할 수 없습니다.");
+                        continue;
+                    }
+
+                    String targetName = message.substring(Protocol.CMD_VOTE.length() + 1).trim();
+                    // GameRoom에 투표 처리 위임
+                    if (currentRoom != null) {
+                        currentRoom.castVote(this, targetName);
+                    }
                 }
                 else {
                     // 기본값은 /chat으로 처리
