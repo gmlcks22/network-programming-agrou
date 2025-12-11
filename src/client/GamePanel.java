@@ -80,7 +80,7 @@ public class GamePanel extends JPanel {
         myRolePanel.setOpaque(false);
         
         myRoleImageLabel = new JLabel();
-        myRoleImageLabel.setPreferredSize(new Dimension(50, 50));
+        myRoleImageLabel.setPreferredSize(new Dimension(65, 75));
         myRoleImageLabel.setBorder(BorderFactory.createLineBorder(Color.GRAY));
         
         myRoleNameLabel = new JLabel("직업: " + myRoleName);
@@ -116,7 +116,7 @@ public class GamePanel extends JPanel {
         rightInfoPanel.setOpaque(false);
         rightInfoPanel.add(survivorCountLabel);
 
-        topPanel.add(survivorCountLabel, BorderLayout.CENTER);
+        topPanel.add(survivorCountLabel, BorderLayout.EAST);
         //topPanel.add(Box.createRigidArea(new Dimension(100, 50)), BorderLayout.EAST);
 
         add(topPanel, BorderLayout.NORTH);
