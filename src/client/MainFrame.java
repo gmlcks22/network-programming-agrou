@@ -156,15 +156,17 @@ public class MainFrame extends JFrame {
                 if (gamePanel != null) {
                     gamePanel.setMyRole(roleName, faction);
                 }
-                
-                // 2. 사용자에게 직업 알림
-                JOptionPane.showMessageDialog(this, 
-                    "당신의 직업은 [" + roleName + "]이며, 진영은 [" + faction + "]입니다.", 
-                    "게임 시작", 
-                    JOptionPane.INFORMATION_MESSAGE);
-                    
-                // 3. 화면 전환
+
+                // 2. 화면 전환
                 changePanel(GAME_PANEL); 
+
+                // 3. 사용자에게 직업 알림
+                SwingUtilities.invokeLater(() -> {
+                    JOptionPane.showMessageDialog(this, 
+                        "당신의 직업은 [" + roleName + "]이며, 진영은 [" + faction + "]입니다.", 
+                        "게임 시작", 
+                        JOptionPane.INFORMATION_MESSAGE);
+                });    
             }
             // 이번 판 등장 직업 목록 수신 처리
             else if (message.startsWith(Protocol.CMD_GAME_ROLES)) {
@@ -194,6 +196,11 @@ public class MainFrame extends JFrame {
                     System.err.println("[클라이언트 오류] 시간 파싱 실패: " + message);
                 } catch (Exception e) {
                     e.printStackTrace();
+                }
+            }else if (message.startsWith(Protocol.CMD_DEATH)) {
+                String deadUser = message.substring(Protocol.CMD_DEATH.length() + 1).trim();
+                if (gamePanel != null) {
+                    gamePanel.handlePlayerDeath(deadUser);
                 }
             }
             // 게임 종료 수신

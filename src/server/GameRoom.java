@@ -173,6 +173,15 @@ public class GameRoom {
                 }
             }
     }
+    public void broadcastDeadMessage(String message) {
+        System.out.println("'" + roomName + "' (유령챗): " + message);
+        for (ClientHandler client : clientsInRoom) {
+            // 사망자(isDead = true)에게만 전송
+            if (client.isDead()) {
+                client.sendMessage(message);
+            }
+        }
+    }
     public void broadcastUserList() {
         StringBuilder list = new StringBuilder(Protocol.CMD_USERLIST);
         for (ClientHandler client : clientsInRoom) {
@@ -269,7 +278,7 @@ public class GameRoom {
             victim.setDead(true);
             victim.sendMessage("[System] 당신은 사망했습니다...");
             broadcastMessage("[System] " + targetNickname + " 님이 사망했습니다.");
-
+            broadcastMessage(Protocol.CMD_DEATH + " " + targetNickname);
             // 여기서 승리 조건을 체크하고, 그 결과를 바로 return.
             return checkWinCondition();
         }

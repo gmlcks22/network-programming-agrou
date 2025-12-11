@@ -1,4 +1,5 @@
-package server;// server.ClientHandler.java
+package server;
+
 import common.Protocol;
 import java.io.*;
 import java.net.Socket;
@@ -107,7 +108,7 @@ public class ClientHandler implements Runnable {
                     if (currentRoom != null) {
                         // 2. 밤/낮 체크
                         if (currentRoom.isNight()) {
-                            // ★ 밤에는 마피아만 채팅 가능
+                            // 밤에는 마피아만 채팅 가능
                             if (role != null && "Mafia".equals(role.getFaction())) {
                                 currentRoom.broadcastMafiaMessage("[마피아] " + nickname + ": " + chatMsg);
                             } else {
@@ -120,6 +121,7 @@ public class ClientHandler implements Runnable {
                     } else {
                         sendMessage("[System] 방에 먼저 참여해야 합니다.");
                     }
+                
                 } else if (message.startsWith(Protocol.CMD_MAFIA_CHAT)) {
                     if (isDead) {
                         sendMessage("[System] 사망자는 채팅할 수 없습니다.");
@@ -135,7 +137,21 @@ public class ClientHandler implements Runnable {
                     } else {
                         sendMessage("[System] 마피아 채팅을 사용할 수 없습니다.");
                     }
-                }else if (message.startsWith(Protocol.CMD_LEAVE)) {
+                
+                // 유령 채팅 처리 로직
+                } else if (message.startsWith(Protocol.CMD_DEAD_CHAT)) {
+                    // 유령(사망자)인지 확인
+                    if (isDead) {
+                        String chatMsg = message.substring(Protocol.CMD_DEAD_CHAT.length() + 1);
+                        if (currentRoom != null) {
+                            // GameRoom의 유령 전용 브로드캐스트 호출
+                            currentRoom.broadcastDeadMessage("[유령] " + nickname + ": " + chatMsg);
+                        }
+                    } else {
+                        sendMessage("[System] 산 사람은 유령 채팅을 볼 수 없습니다.");
+                    }
+
+                } else if (message.startsWith(Protocol.CMD_LEAVE)) {
                     if (currentRoom != null) {
                         currentRoom.removeClient(this); // 방에서 제거, 안내방송, 유저목록
                     }
