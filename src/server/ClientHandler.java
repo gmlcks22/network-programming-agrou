@@ -27,9 +27,18 @@ public class ClientHandler implements Runnable {
     }
 
     // ClientHandler가 GameRoom과 통신하기 위한 getter/setter
-    public String getNickname() { return nickname; }
-    public GameRoom getCurrentRoom() { return currentRoom; }
-    public void setCurrentRoom(GameRoom room) { this.currentRoom = room; }
+    public String getNickname() {
+        return nickname;
+    }
+
+    public GameRoom getCurrentRoom() {
+        return currentRoom;
+    }
+
+    public void setCurrentRoom(GameRoom room) {
+        this.currentRoom = room;
+    }
+
     // GameRoom이 이 ClientHandler의 클라이언트에게 메시지를 보낼 때 사용
     public void sendMessage(String message) {
         out.println(message);
@@ -38,12 +47,26 @@ public class ClientHandler implements Runnable {
     public void setRole(Role role) {
         this.role = role;
     }
-    public Role getRole() { return role; }
-    public String getRoleName() { return role != null ? role.getName() : "None"; }
-    public String getFaction() { return role != null ? role.getFaction() : "None"; }
 
-    public boolean isDead() { return isDead; }
-    public void setDead(boolean isDead) { this.isDead = isDead; }
+    public Role getRole() {
+        return role;
+    }
+
+    public String getRoleName() {
+        return role != null ? role.getName() : "None";
+    }
+
+    public String getFaction() {
+        return role != null ? role.getFaction() : "None";
+    }
+
+    public boolean isDead() {
+        return isDead;
+    }
+
+    public void setDead(boolean isDead) {
+        this.isDead = isDead;
+    }
 
     @Override
     public void run() {
@@ -51,8 +74,9 @@ public class ClientHandler implements Runnable {
             // 클라이언트가 보낸 닉네임을 읽음
             String requestedNickname = in.readLine();
 
-            if (requestedNickname == null) return;  // 바로 끊긴 경우
-
+            if (requestedNickname == null) {
+                return;  // 바로 끊긴 경우
+            }
             System.out.println("[Server] <접속요청> 닉네임: " + requestedNickname);
 
             // 중복 검사
@@ -77,16 +101,16 @@ public class ClientHandler implements Runnable {
                 if (message.startsWith(Protocol.CMD_CREATE)) {
                     // 메시지를 방 제목과 역할 목록으로 분리
                     String content = message.substring(Protocol.CMD_CREATE.length() + 1).trim();
-                    
+
                     // "방제목 역할목록"을 공백 기준으로 나눔 (2개 부분으로만 분리)
-                    String[] parts = content.split(" ", 2); 
-                    
+                    String[] parts = content.split(" ", 2);
+
                     if (parts.length < 2) {
                         sendMessage("[System] 방 생성 형식이 올바르지 않습니다.");
                     } else {
                         String roomName = parts[0];
                         String roleConfig = parts[1]; // 역할 목록 문자열
-                        
+
                         // 수정된 createRoom 호출
                         Server.ROOM_MANAGER.createRoom(roomName, roleConfig, this);
                     }
@@ -96,7 +120,7 @@ public class ClientHandler implements Runnable {
                     if (!Server.ROOM_MANAGER.joinRoom(roomName, this)) {
                         sendMessage("[System] '" + roomName + "' 방을 찾을 수 없습니다.");
                     }
-
+                    // 시민 채팅 처리 로직
                 } else if (message.startsWith(Protocol.CMD_CHAT)) {
                     // 1. 사망자 채팅 금지
                     if (isDead) {
@@ -121,13 +145,13 @@ public class ClientHandler implements Runnable {
                     } else {
                         sendMessage("[System] 방에 먼저 참여해야 합니다.");
                     }
-                
+                    // 마피아 채팅 처리 로직
                 } else if (message.startsWith(Protocol.CMD_MAFIA_CHAT)) {
                     if (isDead) {
                         sendMessage("[System] 사망자는 채팅할 수 없습니다.");
                         continue;
                     }
-                    
+
                     // 마피아인지 확인
                     if (role != null && "Mafia".equals(role.getFaction())) {
                         String chatMsg = message.substring(Protocol.CMD_MAFIA_CHAT.length() + 1);
@@ -137,8 +161,8 @@ public class ClientHandler implements Runnable {
                     } else {
                         sendMessage("[System] 마피아 채팅을 사용할 수 없습니다.");
                     }
-                
-                // 유령 채팅 처리 로직
+
+                    // 유령 채팅 처리 로직
                 } else if (message.startsWith(Protocol.CMD_DEAD_CHAT)) {
                     // 유령(사망자)인지 확인
                     if (isDead) {
@@ -151,6 +175,15 @@ public class ClientHandler implements Runnable {
                         sendMessage("[System] 산 사람은 유령 채팅을 볼 수 없습니다.");
                     }
 
+                } else if (message.startsWith(Protocol.CMD_LOVER_CHAT)) {
+                    if (isDead) {
+                        sendMessage("[System] 사망자는 채팅할 수 없습니다.");
+                        continue;
+                    }
+                    String chatMsg = message.substring(Protocol.CMD_LOVER_CHAT.length() + 1);
+                    if (currentRoom != null) {
+                        currentRoom.broadcastLoverMessage(nickname, chatMsg);
+                    }
                 } else if (message.startsWith(Protocol.CMD_LEAVE)) {
                     if (currentRoom != null) {
                         currentRoom.removeClient(this); // 방에서 제거, 안내방송, 유저목록
@@ -160,18 +193,17 @@ public class ClientHandler implements Runnable {
                     String roomListStr = Server.ROOM_MANAGER.getRoomListString();
                     sendMessage(Protocol.CMD_ROOMLIST + " " + roomListStr); // "/roomlist 방1,방2" 전송
                 } else if (message.equals(Protocol.CMD_START)) { // 게임 시작 명령 처리 확인
-                     if (currentRoom != null) {
+                    if (currentRoom != null) {
                         currentRoom.startGameRequest(this);
-                     } else {
+                    } else {
                         sendMessage("[System] 방에 입장해야 합니다.");
-                     }
-                }
-                else if (message.startsWith(Protocol.CMD_NIGHT_ACTION)) {
+                    }
+                } else if (message.startsWith(Protocol.CMD_NIGHT_ACTION)) {
                     if (currentRoom == null || !currentRoom.isNight()) {
                         sendMessage("[System] 지금은 능력을 사용할 수 없습니다.");
                         continue;
                     }
-                    
+
                     if (role == null || role.getFaction().equals("Citizen")) {
                         // 시민 역할이라도 능력이 있을 수 있으므로, 해당 역할이 'useNightAbility'를 가지고 있는지 확인
                         // 현재는 모든 직업이 Role 인터페이스를 구현했으므로, 능력이 없는 직업(시민)은 별도의 클래스로 처리 필요
@@ -183,13 +215,12 @@ public class ClientHandler implements Runnable {
 
                     // 명령에서 대상 닉네임 추출
                     String targetNickname = message.substring(Protocol.CMD_NIGHT_ACTION.length() + 1).trim();
-                    
+
                     // Role 객체의 능력 사용 메소드를 호출 (GameRoom에 능력 저장)
                     String response = role.useNightAbility(targetNickname, currentRoom);
 
                     sendMessage("[System] " + response); // 능력 사용 성공 응답
-                }
-                else if (message.startsWith(Protocol.CMD_VOTE)) {
+                } else if (message.startsWith(Protocol.CMD_VOTE)) {
                     // 죽은 사람은 투표 불가
                     if (isDead) {
                         sendMessage("[System] 사망자는 투표할 수 없습니다.");
@@ -201,8 +232,7 @@ public class ClientHandler implements Runnable {
                     if (currentRoom != null) {
                         currentRoom.castVote(this, targetName);
                     }
-                }
-                else {
+                } else {
                     // 기본값은 /chat으로 처리
                     if (currentRoom != null) {
                         currentRoom.broadcastMessage(nickname + ": " + message);
@@ -217,7 +247,10 @@ public class ClientHandler implements Runnable {
             if (currentRoom != null) {
                 currentRoom.removeClient(this); // 방에서 제거
             }
-            try { socket.close(); } catch (IOException e) {}
+            try {
+                socket.close();
+            } catch (IOException e) {
+            }
         }
     }
 }

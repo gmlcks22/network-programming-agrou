@@ -1,16 +1,19 @@
 package common;
 
 public class Protocol {
+
     // 클라이언트 -> 서버 요청
     public static final String CMD_CREATE = "/create";
     public static final String CMD_JOIN = "/join";
     public static final String CMD_LEAVE = "/leave";
     public static final String CMD_START = "/start";
+    public static final String CMD_LOVER_ASSIGN = "/loverassign";
 
 // 채팅 관련
     public static final String CMD_CHAT = "/chat";          // 전체 채팅
     public static final String CMD_MAFIA_CHAT = "/mafia";   // 마피아 전용
     public static final String CMD_DEAD_CHAT = "/dead";     // 유령 전용
+    public static final String CMD_LOVER_CHAT = "/lover";
 
 // 게임 액션
     public static final String CMD_VOTE = "/vote";          // 낮 투표

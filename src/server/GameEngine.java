@@ -1,4 +1,4 @@
-package server; 
+package server;
 
 import common.Protocol;
 import java.util.*;
@@ -6,7 +6,7 @@ import server.roles.*;
 
 public class GameEngine {
 
-    private GameRoom room; 
+    private GameRoom room;
     private Timer gameTimer;
     private GamePhase currentPhase = GamePhase.WAITING;
 
@@ -22,10 +22,10 @@ public class GameEngine {
     // 게임 시작
     public void assignRolesAndStartGame() {
         List<ClientHandler> clients = room.getClientsInRoom();
-        String roleConfig = room.getCustomRoleConfig(); 
-        
+        String roleConfig = room.getCustomRoleConfig();
+
         String[] roleNames = roleConfig.split(",");
-        
+
         if (roleNames.length != clients.size()) {
             room.broadcastMessage("[System] 오류: 역할 수(" + roleNames.length + ")와 플레이어 수(" + clients.size() + ")가 일치하지 않습니다.");
             return;
@@ -33,7 +33,7 @@ public class GameEngine {
 
         List<Role> rolesToAssign = new LinkedList<>();
         for (String roleName : roleNames) {
-            Role role = createRoleInstance(roleName.trim()); 
+            Role role = createRoleInstance(roleName.trim());
             if (role != null) {
                 rolesToAssign.add(role);
             } else {
@@ -41,22 +41,22 @@ public class GameEngine {
                 return;
             }
         }
-        
-        Collections.shuffle(rolesToAssign); 
-        
+
+        Collections.shuffle(rolesToAssign);
+
         for (int i = 0; i < clients.size(); i++) {
             ClientHandler client = clients.get(i);
             Role assignedRole = rolesToAssign.get(i);
-            
+
             client.setRole(assignedRole);
             client.sendMessage(
-                Protocol.CMD_ROLE_ASSIGN + " " + assignedRole.getName() + " " + assignedRole.getFaction()
+                    Protocol.CMD_ROLE_ASSIGN + " " + assignedRole.getName() + " " + assignedRole.getFaction()
             );
             System.out.println("[GameEngine] " + client.getNickname() + "에게 " + assignedRole.getName() + " 배정");
         }
-        
+
         room.broadcastMessage(Protocol.CMD_GAME_ROLES + " " + roleConfig);
-        
+
         room.setIsNight(false);
         room.broadcastMessage("--- [게임 시작] ---");
         room.broadcastMessage("[System] 직업이 배정되었습니다. 첫 번째 낮이 시작됩니다!");
@@ -68,7 +68,9 @@ public class GameEngine {
     // 페이지 전환 및 타이머 시작
     private void startPhase(GamePhase nextPhase) {
         // 기존 타이머 취소
-        if (gameTimer != null) gameTimer.cancel();
+        if (gameTimer != null) {
+            gameTimer.cancel();
+        }
 
         this.currentPhase = nextPhase;
         int duration = 0;
@@ -107,7 +109,9 @@ public class GameEngine {
     // 다음 단계로 이동하는 로직 (순환 구조)
     private void nextPhase() {
         // 이미 게임이 끝난 상태면 아무것도 하지 않음
-        if (currentPhase == GamePhase.ENDED) return;
+        if (currentPhase == GamePhase.ENDED) {
+            return;
+        }
 
         switch (currentPhase) {
             case DAY_DISCUSSION:
@@ -199,7 +203,9 @@ public class GameEngine {
         room.getNightActions().clear();
 
         // 밤에 누군가 죽어서 게임이 끝났다면 엔진 정지
-        if (isGameEnded) { stopEngine(); }
+        if (isGameEnded) {
+            stopEngine();
+        }
     }
 
     // 엔진 정지 메소드
@@ -215,11 +221,13 @@ public class GameEngine {
     // 닉네임으로 클라이언트 찾기 헬퍼
     private ClientHandler findClientByNickname(String nickname) {
         for (ClientHandler c : room.getClientsInRoom()) {
-            if (c.getNickname().equals(nickname)) return c;
+            if (c.getNickname().equals(nickname)) {
+                return c;
+            }
         }
         return null;
     }
-    
+
     /**
      * 역할 이름에 따라 해당 Role 클래스의 인스턴스를 생성하는 헬퍼 메소드
      */
@@ -231,7 +239,7 @@ public class GameEngine {
                 return new GuardRole(); // 내부에서 "경비병" 반환
             case "선견자":
                 return new SeerRole(); // 내부에서 "선견자" 반환
-            
+
             // 특수 직업들을 한글 이름으로 생성
             case "독재자":
                 return new CitizenRole("독재자");
@@ -242,13 +250,12 @@ public class GameEngine {
             case "천사":
                 return new CitizenRole("천사");
             case "큐피드":
-                return new CitizenRole("큐피드");
-                
+                return new CupidRole();                
             case "시민":
                 return new CitizenRole(); // 기본값 "시민"
             default:
                 // 혹시 모를 예외 처리를 위해 기본 시민으로 반환하거나 null
-                return new CitizenRole("시민"); 
+                return new CitizenRole("시민");
         }
     }
 }

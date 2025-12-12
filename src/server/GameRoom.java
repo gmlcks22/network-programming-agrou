@@ -24,6 +24,9 @@ public class GameRoom {
     // 한 사람이 여러 번 투표하면 마지막 투표로 덮어씌워짐
     private Map<String, String> dayVotes;
 
+    // 연인 관계 저장 (Key: 유저, Value: 파트너)
+    private Map<String, String> lovers = new ConcurrentHashMap<>();
+
     //  생성자: customRoleConfig 추가
     public GameRoom(String roomName, String customRoleConfig) {
         this.roomName = roomName;
@@ -164,15 +167,66 @@ public class GameRoom {
             client.sendMessage(message);
         }
     }
+
+    // 마피아 채팅
     public void broadcastMafiaMessage(String message) {
-            System.out.println("'" + roomName + "' (마피아챗): " + message);
-            for (ClientHandler client : clientsInRoom) {
-                // 역할이 있고, 진영이 Mafia인 사람에게만 전송
-                if (client.getRole() != null && "Mafia".equals(client.getRole().getFaction())) {
-                    client.sendMessage(message);
-                }
+        System.out.println("'" + roomName + "' (마피아챗): " + message);
+        for (ClientHandler client : clientsInRoom) {
+            // 역할이 있고, 진영이 Mafia인 사람에게만 전송
+            if (client.getRole() != null && "Mafia".equals(client.getRole().getFaction())) {
+                client.sendMessage(message);
             }
+        }
     }
+
+    // 연인 설정 메소드
+    public synchronized boolean setLovers(String user1Name, String user2Name) {
+        ClientHandler user1 = findClientByNickname(user1Name);
+        ClientHandler user2 = findClientByNickname(user2Name);
+
+        if (user1 == null || user2 == null) {
+            return false;
+        }
+
+        // 양방향 매핑
+        lovers.put(user1Name, user2Name);
+        lovers.put(user2Name, user1Name);
+
+        System.out.println("[GameRoom] 연인 탄생: " + user1Name + " - " + user2Name);
+
+        // 1. 텍스트 안내 (플레이어 확인용)
+        user1.sendMessage("[System] 💘 큐피드의 화살을 맞았습니다! 당신의 연인은 '" + user2Name + "' 입니다.");
+        user2.sendMessage("[System] 💘 큐피드의 화살을 맞았습니다! 당신의 연인은 '" + user1Name + "' 입니다.");
+
+        // 2. 프로토콜 전송 (클라이언트 UI 갱신용)
+        // 형식: /loverassign 파트너닉네임
+        user1.sendMessage(Protocol.CMD_LOVER_ASSIGN + " " + user2Name);
+        user2.sendMessage(Protocol.CMD_LOVER_ASSIGN + " " + user1Name);
+
+        return true;
+    }
+
+    // 연인 채팅
+    public void broadcastLoverMessage(String senderName, String message) {
+        if (!lovers.containsKey(senderName)) {
+            return; // 연인이 아니면 무시
+        }
+        String partnerName = lovers.get(senderName);
+        ClientHandler sender = findClientByNickname(senderName);
+        ClientHandler partner = findClientByNickname(partnerName);
+
+        String formattedMsg = "[연인] " + senderName + ": " + message;
+
+        if (sender != null) {
+            sender.sendMessage(formattedMsg);
+        }
+        if (partner != null) {
+            partner.sendMessage(formattedMsg);
+        }
+
+        System.out.println("'" + roomName + "' (연인챗): " + message);
+    }
+
     public void broadcastDeadMessage(String message) {
         System.out.println("'" + roomName + "' (유령챗): " + message);
         for (ClientHandler client : clientsInRoom) {
@@ -182,6 +236,7 @@ public class GameRoom {
             }
         }
     }
+
     public void broadcastUserList() {
         StringBuilder list = new StringBuilder(Protocol.CMD_USERLIST);
         for (ClientHandler client : clientsInRoom) {
@@ -273,25 +328,57 @@ public class GameRoom {
 
     // 3. 유저 사망 처리
     public boolean killUser(String targetNickname) {
-        ClientHandler victim = findClientByNickname(targetNickname);
-        if (victim != null && !victim.isDead()) {
-            victim.setDead(true);
-            victim.sendMessage("[System] 당신은 사망했습니다...");
-            broadcastMessage("[System] " + targetNickname + " 님이 사망했습니다.");
-            broadcastMessage(Protocol.CMD_DEATH + " " + targetNickname);
-            // 여기서 승리 조건을 체크하고, 그 결과를 바로 return.
-            return checkWinCondition();
-        }
-        return false; // 아무도 안 죽었거나 에러면 게임 안 끝남
+        return killUser(targetNickname, "GENERAL");
     }
 
-    // 4. 승리 조건 판단 (GameEngine이나 killUser에서 호출)
+    public boolean killUser(String targetNickname, String cause) {
+        ClientHandler victim = findClientByNickname(targetNickname);
+
+        if (victim != null && !victim.isDead()) {
+            victim.setDead(true);
+
+            // 사망 메시지 전송
+            if (cause.equals("HEARTBREAK")) {
+                broadcastMessage("[System] 비극적인 사랑! '" + targetNickname + "' 님이 연인을 따라 스스로 목숨을 끊었습니다.");
+            } else {
+                broadcastMessage("[System] '" + targetNickname + "' 님이 사망했습니다.");
+            }
+
+            victim.sendMessage("[System] 당신은 사망했습니다...");
+            broadcastMessage(Protocol.CMD_DEATH + " " + targetNickname);
+
+            // 연인 체크: 내가 죽으면 내 연인도 죽는다 (원인이 상사병이 아닐 때만 발동하여 무한루프 방지)
+            if (!cause.equals("HEARTBREAK") && lovers.containsKey(targetNickname)) {
+                String partnerName = lovers.get(targetNickname);
+                ClientHandler partner = findClientByNickname(partnerName);
+
+                if (partner != null && !partner.isDead()) {
+                    // 파트너를 '상사병(HEARTBREAK)'으로 죽임 -> 사냥꾼/천사 능력 발동 안 함
+                    killUser(partnerName, "HEARTBREAK");
+                }
+            }
+
+            // 사냥꾼/천사 능력 발동 체크 (상사병으로 죽은 경우 발동 안 함)
+            if (!cause.equals("HEARTBREAK")) {
+                // TODO: 사냥꾼(Hunter)이나 천사(Angel)라면 여기서 능력 발동 로직 호출
+                // if (victim.getRoleName().equals("사냥꾼")) { ... }
+            }
+
+            return checkWinCondition();
+        }
+        return false;
+    }
+
+    // 승리 조건 판단 (연인 승리 추가)
     public boolean checkWinCondition() {
+        int aliveCount = 0;
         int wolfCount = 0;
         int citizenCount = 0;
 
+        // 생존자 집계
         for (ClientHandler client : clientsInRoom) {
-            if (!client.isDead()) { // 살아있는 사람만 카운트
+            if (!client.isDead()) {
+                aliveCount++;
                 if (client.getRole().getFaction().equals("Mafia")) {
                     wolfCount++;
                 } else {
@@ -300,7 +387,27 @@ public class GameRoom {
             }
         }
 
-        // 승리 판별
+        // 1. 연인 승리 체크 (단 둘만 남았고, 그 둘이 연인일 때)
+        if (aliveCount == 2) {
+            // 살아있는 사람 찾기
+            ClientHandler[] survivors = new ClientHandler[2];
+            int idx = 0;
+            for (ClientHandler c : clientsInRoom) {
+                if (!c.isDead()) {
+                    survivors[idx++] = c;
+                }
+            }
+
+            // 둘이 연인 관계인지 확인
+            if (lovers.containsKey(survivors[0].getNickname())
+                    && lovers.get(survivors[0].getNickname()).equals(survivors[1].getNickname())) {
+
+                endGame("사랑의 힘! 연인 팀(" + survivors[0].getNickname() + ", " + survivors[1].getNickname() + ") 승리!");
+                return true;
+            }
+        }
+
+        // 2. 기존 승리 조건
         if (wolfCount == 0) {
             endGame("시민 팀 승리! (모든 늑대를 처형했습니다)");
             return true;
@@ -309,7 +416,7 @@ public class GameRoom {
             return true;
         }
 
-        return false; // 게임 계속 진행
+        return false;
     }
 
     // 5. 게임 종료 처리
