@@ -50,11 +50,13 @@ public class CreateGamePanel extends JPanel {
             super(roleName);
             this.roleName = roleName;
             this.faction = faction;
-            setFont(new Font("맑은 고딕", Font.PLAIN, 14));
+            setFont(UIManager.getFont("defaultFont").deriveFont(Font.BOLD, (float)14));
             setAlignmentX(Component.LEFT_ALIGNMENT);
             setOpaque(true);
-            setBackground(Color.WHITE);
-            setBorder(BorderFactory.createEmptyBorder(0, 5, 0, 0));
+            setBorder(BorderFactory.createEmptyBorder(2, 5, 2, 5));
+
+            setToolTipText("클릭하여 목록에서 제거");
+            setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
 
             addMouseListener(new MouseAdapter() {
                 @Override
@@ -64,12 +66,17 @@ public class CreateGamePanel extends JPanel {
 
                 @Override
                 public void mouseEntered(MouseEvent e) {
-                    setBackground(new Color(255, 200, 200));
+                    setBackground(new Color(220, 50, 50));
+                    setForeground(Color.WHITE); // text color
+                    // 취소선 효과 적용
+                    setText("<html><strike>" + roleName + "</strike></html>");
                 }
 
                 @Override
                 public void mouseExited(MouseEvent e) {
-                    setBackground(Color.WHITE);
+                    setBackground(UIManager.getColor("Panel.background"));
+                    setForeground(UIManager.getColor("Panel.foreground"));
+                    setText(roleName);
                 }
             });
         }
@@ -82,35 +89,30 @@ public class CreateGamePanel extends JPanel {
     public CreateGamePanel(MainFrame mainFrame) {
         this.mainFrame = mainFrame;
 
-        this.setBackground(Color.WHITE);
         this.setLayout(new BorderLayout(20, 20)); // 전체 레이아웃
         this.setBorder(BorderFactory.createEmptyBorder(50, 50, 50, 50));
 
         // 3. (NORTH) - 전체 타이틀
         JLabel titleLabel = new JLabel("게임 생성하기");
-        titleLabel.setFont(new Font("맑은 고딕", Font.BOLD, 30));
+        titleLabel.setFont(UIManager.getFont("defaultFont").deriveFont(Font.BOLD, (float)30));
         titleLabel.setHorizontalAlignment(SwingConstants.CENTER);
         this.add(titleLabel, BorderLayout.NORTH);
 
         // 메인 컨텐츠 패널 (좌, 중, 우 포함)
         JPanel mainContentPanel = new JPanel(new BorderLayout(20, 20));
-        mainContentPanel.setBackground(Color.WHITE);
         this.add(mainContentPanel, BorderLayout.CENTER);
 
         //  왼쪽 설정 패널 (방번호, 인원수) ---
         JPanel leftPanel = new JPanel();
         leftPanel.setLayout(new BoxLayout(leftPanel, BoxLayout.Y_AXIS));
-        leftPanel.setBackground(Color.WHITE);
 
         // 방 번호
         JPanel roomPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        roomPanel.setBackground(Color.WHITE);
         JLabel roomLabel = new JLabel("방 번호");
-        roomLabel.setFont(new Font("맑은 고딕", Font.BOLD, 14));
+        roomLabel.setFont(UIManager.getFont("defaultFont").deriveFont(Font.BOLD, (float)14));
 
         roomField = new JTextField("10394813");
         roomField.setEditable(false);
-        roomField.setBackground(new Color(240, 240, 240));
         roomField.setPreferredSize(new Dimension(100, 30));
 
         roomPanel.add(roomLabel);
@@ -119,14 +121,13 @@ public class CreateGamePanel extends JPanel {
 
         // 인원수 조절
         JPanel popPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        popPanel.setBackground(Color.WHITE);
         JLabel popLabelTitle = new JLabel("인원수");
-        popLabelTitle.setFont(new Font("맑은 고딕", Font.BOLD, 14));
+        popLabelTitle.setFont(UIManager.getFont("defaultFont").deriveFont(Font.BOLD, (float)14));
 
         JButton minusButton = new JButton("-");
         JButton plusButton = new JButton("+");
         populationLabel = new JLabel(currentPopulation + "명");
-        populationLabel.setFont(new Font("맑은 고딕", Font.BOLD, 14));
+        populationLabel.setFont(UIManager.getFont("defaultFont").deriveFont(Font.BOLD, (float)14));
 
         Dimension buttonSize = new Dimension(45, 30);
         minusButton.setPreferredSize(buttonSize);
@@ -148,16 +149,14 @@ public class CreateGamePanel extends JPanel {
 
         // 중앙 역할 선택 그리드 ---
         JPanel roleGridWrapper = new JPanel(new BorderLayout());
-        roleGridWrapper.setBackground(Color.WHITE);
         roleGridWrapper.setBorder(BorderFactory.createTitledBorder(
                 BorderFactory.createEtchedBorder(), "역할 선택",
                 TitledBorder.CENTER, TitledBorder.TOP,
-                new Font("맑은 고딕", Font.BOLD, 16)
+                UIManager.getFont("defaultFont").deriveFont(Font.BOLD, (float)16)
         ));
 
         // 5열 그리드
         JPanel roleGridPanel = new JPanel(new GridLayout(0, 5, 5, 5));
-        roleGridPanel.setBackground(Color.WHITE);
         roleGridPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
 
         // 역할 데이터
@@ -184,7 +183,6 @@ public class CreateGamePanel extends JPanel {
             }
 
             roleButton.setPreferredSize(new Dimension(65, 95));
-            roleButton.setBackground(Color.WHITE);
             roleButton.setMargin(new Insets(0, 0, 0, 0));
             roleButton.setBorderPainted(false);
             roleButton.setMargin(new Insets(0, 0, 0, 0));
@@ -206,22 +204,19 @@ public class CreateGamePanel extends JPanel {
 
         // 오른쪽 선택한 역할 패널---
         JPanel rightPanel = new JPanel(new BorderLayout());
-        rightPanel.setBackground(Color.WHITE);
         rightPanel.setBorder(BorderFactory.createTitledBorder(
                 BorderFactory.createEtchedBorder(), "선택한 역할",
                 TitledBorder.LEFT, TitledBorder.TOP,
-                new Font("맑은 고딕", Font.BOLD, 16)
+                UIManager.getFont("defaultFont").deriveFont(Font.BOLD, (float)16)
         ));
 
         // 역할 목록이 들어갈 내부 패널
         selectedRolesListPanel = new JPanel();
         selectedRolesListPanel.setLayout(new BoxLayout(selectedRolesListPanel, BoxLayout.Y_AXIS));
-        selectedRolesListPanel.setBackground(Color.WHITE);
         selectedRolesListPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
 
         JScrollPane scrollPane = new JScrollPane(selectedRolesListPanel);
         scrollPane.setBorder(null);
-        scrollPane.getViewport().setBackground(Color.WHITE);
 
         scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
         scrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
@@ -232,22 +227,22 @@ public class CreateGamePanel extends JPanel {
 
         // 하단 버튼
         JPanel bottomPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
-        bottomPanel.setBackground(Color.WHITE);
 
         // 취소 버튼
         JButton cancelButton = new JButton("취소");
-        cancelButton.setBackground(new Color(255, 100, 100)); // 붉은색 계열
+        cancelButton.setBackground(new Color(80, 80, 80));
         cancelButton.setForeground(Color.WHITE);
         cancelButton.setPreferredSize(new Dimension(100, 40));
-        cancelButton.setFont(new Font("맑은 고딕", Font.BOLD, 14));
+        cancelButton.setFont(UIManager.getFont("defaultFont").deriveFont(Font.BOLD, (float)14));
         //확인 버튼
         JButton confirmButton = new JButton("확인");
-        confirmButton.setBackground(new Color(100, 225, 100));
+        confirmButton.setBackground(new Color(180, 0, 0));
+        confirmButton.setForeground(Color.WHITE);
         confirmButton.setPreferredSize(new Dimension(100, 40));
-        confirmButton.setFont(new Font("맑은 고딕", Font.BOLD, 14));
+        confirmButton.setFont(UIManager.getFont("defaultFont").deriveFont(Font.BOLD, (float)14));
 
-        bottomPanel.add(confirmButton);
         bottomPanel.add(cancelButton);
+        bottomPanel.add(confirmButton);
 
         this.add(bottomPanel, BorderLayout.SOUTH);
 

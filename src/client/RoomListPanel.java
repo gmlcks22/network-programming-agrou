@@ -19,11 +19,10 @@ public class RoomListPanel extends JPanel {
     public RoomListPanel(MainFrame mainFrame) {
         this.mainFrame = mainFrame;
         setLayout(new BorderLayout());
-        setBackground(Color.white);
 
         // 상단 타이틀
         JLabel titleLabel = new JLabel("참여할 방을 선택하세요");
-        titleLabel.setFont(new Font("맑은 고딕", Font.BOLD, 24));
+        titleLabel.setFont(UIManager.getFont("defaultFont").deriveFont(Font.BOLD, (float)24));
         titleLabel.setHorizontalAlignment(SwingConstants.CENTER);
         titleLabel.setBorder(BorderFactory.createEmptyBorder(20, 0, 20, 0));
         add(titleLabel, BorderLayout.NORTH);
@@ -32,7 +31,7 @@ public class RoomListPanel extends JPanel {
         roomListModel = new DefaultListModel<>();
         roomList = new JList<>(roomListModel);
         roomList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        roomList.setFont(new Font("맑은 고딕", Font.PLAIN, 16));
+        roomList.setFont(UIManager.getFont("defaultFont").deriveFont(Font.PLAIN, (float)16));
 
         // 더블 클릭 시 바로 입장
         roomList.addMouseListener(new MouseAdapter() {
@@ -49,7 +48,6 @@ public class RoomListPanel extends JPanel {
 
         // 하단: 버튼들
         JPanel bottomPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 20, 10));
-        bottomPanel.setBackground(Color.white);
 
         JButton refreshButton = new JButton("새로고침");
         JButton joinButton = new JButton("입장하기");
@@ -60,7 +58,6 @@ public class RoomListPanel extends JPanel {
         refreshButton.setPreferredSize(btnSize);
         joinButton.setPreferredSize(btnSize);
         backButton.setPreferredSize(btnSize);
-        joinButton.setBackground(new Color(200, 230, 255));
 
         bottomPanel.add(refreshButton);
         bottomPanel.add(joinButton);

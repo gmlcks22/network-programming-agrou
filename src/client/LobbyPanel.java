@@ -24,20 +24,18 @@ public class LobbyPanel extends JPanel {
         this.mainPanel = mainFrame;
 
         // 3. 기본 설정 (백그라운드, 전체 레이아웃)
-        this.setBackground(Color.WHITE);
         this.setLayout(new BorderLayout(10, 10)); // 전체 레이아웃 (북, 서)
         this.setBorder(BorderFactory.createEmptyBorder(50, 50, 50, 50));
 
         // 4. 타이틀 (North)
         JLabel titleLabel = new JLabel("Mafia Game");
-        titleLabel.setFont(new Font("SansSerif", Font.BOLD, 40));
+        titleLabel.setFont(UIManager.getFont("defaultFont").deriveFont(Font.BOLD, (float)40));
         titleLabel.setHorizontalAlignment(SwingConstants.CENTER);
         this.add(titleLabel, BorderLayout.NORTH);
 
         // 5. 버튼 패널 (West) - Y축으로 쌓는 BoxLayout 사용
         JPanel buttonPanel = new JPanel();
         buttonPanel.setLayout(new BoxLayout(buttonPanel, BoxLayout.Y_AXIS));
-        buttonPanel.setBackground(Color.WHITE); // 배경색 통일
 
         // 6. 버튼 생성
         createRoomButton = new JButton("게임 생성하기");
@@ -46,22 +44,19 @@ public class LobbyPanel extends JPanel {
 
         // 7. 버튼 크기 및 스타일 설정
         Dimension buttonSize = new Dimension(150, 40);
-        Font buttonFont = new Font("SansSerif", Font.BOLD, 14);
+        Font buttonFont = UIManager.getFont("defaultFont").deriveFont(Font.BOLD, (float)14);
 
         createRoomButton.setPreferredSize(buttonSize);
         createRoomButton.setMaximumSize(buttonSize);
         createRoomButton.setFont(buttonFont);
-        createRoomButton.setBackground(new Color(220, 220, 220));
 
         findRoomButton.setPreferredSize(buttonSize);
         findRoomButton.setMaximumSize(buttonSize);
         findRoomButton.setFont(buttonFont);
-        findRoomButton.setBackground(new Color(220, 220, 220));
         
         settingsButton.setPreferredSize(buttonSize);
         settingsButton.setMaximumSize(buttonSize);
         settingsButton.setFont(buttonFont);
-        settingsButton.setBackground(new Color(220, 220, 220));
 
         // 8. 버튼 패널에 컴포넌트 추가
         buttonPanel.add(Box.createVerticalGlue()); 

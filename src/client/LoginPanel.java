@@ -14,6 +14,7 @@ import java.net.Socket;
 
 public class LoginPanel extends JPanel {
     private MainFrame mainFrame;
+    private Image backgroundImage;
 
     // GUI 컴포넌트 선언
     private JTextField ipField;
@@ -25,25 +26,32 @@ public class LoginPanel extends JPanel {
     public LoginPanel(MainFrame mainFrame) {
         this.mainFrame = mainFrame;
 
+        // 배경 이미지 로드
+        try {
+            ImageIcon icon = new ImageIcon(getClass().getResource("/resources/images/night-village.jpg"));
+            backgroundImage = icon.getImage();
+        } catch (Exception e) {
+            System.err.println("배경 이미지를 찾을 수 없습니다.");
+        }
+
         // 기본 설정 (백그라운드, 전체 레이아웃)
-        this.setBackground(Color.WHITE);
         this.setLayout(new BorderLayout(10, 10)); // 전체 레이아웃 (북, 중앙)
         this.setBorder(BorderFactory.createEmptyBorder(50, 50, 50, 50));
 
         // 타이틀 (North)
         JLabel titleLabel = new JLabel("Mafia Game");
-        titleLabel.setFont(new Font("SansSerif", Font.BOLD, 40));
+        titleLabel.setFont(UIManager.getFont("defaultFont").deriveFont(Font.BOLD, (float)40));
         titleLabel.setHorizontalAlignment(SwingConstants.CENTER);
         add(titleLabel, BorderLayout.NORTH);
 
         // 폼 패널 (Center)
         JPanel formWrapperPanel = new JPanel(new GridBagLayout());
-        formWrapperPanel.setBackground(Color.WHITE); // 배경색 통일
+        formWrapperPanel.setOpaque(false);  // 내부 패널들을 투명하게 만들어야 배경이 보임
 
         // 실제 폼 컴포넌트(필드, 버튼)들을 담을 패널 (Y축으로 쌓음)
         JPanel formPanel = new JPanel();
         formPanel.setLayout(new BoxLayout(formPanel, BoxLayout.Y_AXIS));
-        formPanel.setBackground(Color.WHITE);
+        formPanel.setOpaque(false);
 
         // 필드 및 버튼 생성
         ipField = new JTextField(20);
@@ -51,10 +59,18 @@ public class LoginPanel extends JPanel {
         nicknameField = new JTextField(20);
         loginButton = new JButton("로그인");
 
+        // IP와 포트 기본값 입력 (Placeholder 대체)
+        ipField.setText("127.0.0.1");
+        portField.setText("9000");
+
+        // 랜덤 닉네임
+         int randomId = (int)(Math.random() * 1000);
+         nicknameField.setText("Player" + randomId);
+
         // Placeholder 텍스트 구현
-        addPlaceholder(ipField, "서버 ip");
-        addPlaceholder(portField, "포트번호");
-        addPlaceholder(nicknameField, "닉네임");
+//        addPlaceholder(ipField, "서버 ip");
+//        addPlaceholder(portField, "포트번호");
+//        addPlaceholder(nicknameField, "닉네임");
 
         // 컴포넌트 크기 설정 (일관된 크기)
         Dimension fieldSize = new Dimension(250, 40);
@@ -68,13 +84,11 @@ public class LoginPanel extends JPanel {
         loginButton.setMaximumSize(fieldSize);
         
         // 폰트 및 정렬 설정
-        Font fieldFont = new Font("SansSerif", Font.PLAIN, 14);
+        Font fieldFont = UIManager.getFont("defaultFont").deriveFont(Font.PLAIN, (float)14);
         ipField.setFont(fieldFont);
         portField.setFont(fieldFont);
         nicknameField.setFont(fieldFont);
-        
-        loginButton.setBackground(new Color(220, 220, 220)); // 이미지와 유사한 회색
-        loginButton.setFont(new Font("SansSerif", Font.BOLD, 14));
+        loginButton.setFont(UIManager.getFont("defaultFont").deriveFont(Font.BOLD, (float)14));
 
         // 폼 패널에 컴포넌트 추가
         formPanel.add(ipField);
@@ -104,6 +118,11 @@ public class LoginPanel extends JPanel {
             public void actionPerformed(ActionEvent e) {
                 tryConnect();
             }
+        });
+        // 닉네임 텍스트 필드에서 엔터키 입력 시 로그인
+        nicknameField.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) { tryConnect(); }
         });
     }
 
@@ -158,6 +177,16 @@ public class LoginPanel extends JPanel {
         }
     }
 
+    // 배경 그리기
+    @Override
+    protected void paintComponent(Graphics g) {
+        super.paintComponent(g);
+        // 이미지가 로드되었다면 화면에 꽉 차게 그림
+        if (backgroundImage != null) {
+            g.drawImage(backgroundImage, 0, 0, getWidth(), getHeight(), this);
+        }
+    }
+
     /**
      * (부가 기능) JTextField에 Placeholder 텍스트를 추가하는 헬퍼 메소드
      */
@@ -171,7 +200,7 @@ public class LoginPanel extends JPanel {
                 // 클릭해서 포커스를 얻었을 때
                 if (textField.getText().equals(placeholder)) {
                     textField.setText("");
-                    textField.setForeground(Color.BLACK);
+                    textField.setForeground(UIManager.getColor("TextField.foreground"));
                 }
             }
             @Override

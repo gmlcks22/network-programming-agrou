@@ -5,9 +5,11 @@ import common.Protocol;
 import javax.swing.*;
 import java.awt.*;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.Socket;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
+import com.formdev.flatlaf.FlatDarkLaf;
 
 public class MainFrame extends JFrame {
 
@@ -243,6 +245,43 @@ public class MainFrame extends JFrame {
     }
 
     public static void main(String[] args) {
+        // FlatLaf 적용
+        try {
+            UIManager.put("Component.focusColor", new Color(180, 0, 0)); // 포커스 테두리
+            UIManager.put("Component.accentColor", new Color(200, 40, 40)); // 주요 강조 색
+            UIManager.put("Button.default.background", new Color(180, 0, 0)); // 기본 버튼 배경
+            UIManager.put("Button.default.focusedBackground", new Color(200, 50, 50));
+            FlatDarkLaf.setup();
+
+            try {
+                String fontPath = "/resources/fonts/NotoSerifKR-Regular.ttf";
+
+                InputStream is = MainFrame.class.getResourceAsStream(fontPath);
+                if (is == null) {
+                    System.err.println("폰트 파일을 찾을 수 없습니다: " + fontPath);
+                } else {
+                    // 폰트 생성
+                    Font customFont = Font.createFont(Font.TRUETYPE_FONT, is);
+
+                    // 그래픽 환경에 폰트 등록(이름으로 불러내기 위함)
+                    GraphicsEnvironment ge = GraphicsEnvironment.getLocalGraphicsEnvironment();
+                    ge.registerFont(customFont);
+
+                    // 등록된 폰트의 실제 이름 확인
+                    System.out.println("로드된 폰트 이름: " + customFont.getFontName());
+
+                    // 3. 전체 UI에 이 폰트 적용
+                    Font uiFont = customFont.deriveFont(14f); // 기본 크기 14
+                    UIManager.put("defaultFont", uiFont);
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+                System.err.println("폰트 로딩 실패! 기본 폰트를 사용합니다.");
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
         SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
