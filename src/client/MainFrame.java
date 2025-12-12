@@ -25,6 +25,8 @@ public class MainFrame extends JFrame {
     // GamePanel을 멤버 변수(필드)로 선언
     private GamePanel gamePanel;
 
+    // 현재 접속 중인 유저 목록을 기억할 변수
+    private String[] latestUserList = new String[0];
     // 각 화면의 이름을 상수로 정의
     public static final String LOGIN_PANEL = "client.LoginPanel";
     public static final String LOBBY_PANEL = "client.LobbyPanel";
@@ -138,6 +140,9 @@ public class MainFrame extends JFrame {
                 String userListString = message.substring(10).trim();
                 // 공백 기준으로 닉네임 분리
                 String[] users = userListString.isEmpty() ? new String[0] : userListString.split(" ");
+
+                // 최신 유저 목록을 저장해둠 (게임 시작 시 복구용)
+                this.latestUserList = users;
                 waitingPanel.updateUserList(users);
 
                 // 게임 패널에도 유저 목록 전달
@@ -163,6 +168,9 @@ public class MainFrame extends JFrame {
                 if (gamePanel != null) {
                     gamePanel.reset(); // 게임 데이터/채팅 청소
                     gamePanel.setMyRole(roleName, faction);
+
+                    // 지워진 유저 목록을 다시 채워넣음
+                    gamePanel.updateUserList(this.latestUserList);
                 }
 
                 // 2. 화면 전환
