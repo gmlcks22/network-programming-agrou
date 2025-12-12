@@ -14,6 +14,7 @@ import java.net.Socket;
 
 public class LoginPanel extends JPanel {
     private MainFrame mainFrame;
+    private Image backgroundImage;
 
     // GUI 컴포넌트 선언
     private JTextField ipField;
@@ -24,6 +25,14 @@ public class LoginPanel extends JPanel {
     // 생성자(Constructor)
     public LoginPanel(MainFrame mainFrame) {
         this.mainFrame = mainFrame;
+
+        // 배경 이미지 로드
+        try {
+            ImageIcon icon = new ImageIcon(getClass().getResource("/resources/images/night-village.jpg"));
+            backgroundImage = icon.getImage();
+        } catch (Exception e) {
+            System.err.println("배경 이미지를 찾을 수 없습니다.");
+        }
 
         // 기본 설정 (백그라운드, 전체 레이아웃)
         this.setLayout(new BorderLayout(10, 10)); // 전체 레이아웃 (북, 중앙)
@@ -37,10 +46,12 @@ public class LoginPanel extends JPanel {
 
         // 폼 패널 (Center)
         JPanel formWrapperPanel = new JPanel(new GridBagLayout());
+        formWrapperPanel.setOpaque(false);  // 내부 패널들을 투명하게 만들어야 배경이 보임
 
         // 실제 폼 컴포넌트(필드, 버튼)들을 담을 패널 (Y축으로 쌓음)
         JPanel formPanel = new JPanel();
         formPanel.setLayout(new BoxLayout(formPanel, BoxLayout.Y_AXIS));
+        formPanel.setOpaque(false);
 
         // 필드 및 버튼 생성
         ipField = new JTextField(20);
@@ -163,6 +174,16 @@ public class LoginPanel extends JPanel {
             JOptionPane.showMessageDialog(this, "포트 번호는 숫자여야 합니다.", "오류", JOptionPane.WARNING_MESSAGE);
         } catch (IOException e) {
             JOptionPane.showMessageDialog(this, "서버 연결 실패!\nIP와 포트를 다시 확인해주세요.", "연결 오류", JOptionPane.ERROR_MESSAGE);
+        }
+    }
+
+    // 배경 그리기
+    @Override
+    protected void paintComponent(Graphics g) {
+        super.paintComponent(g);
+        // 이미지가 로드되었다면 화면에 꽉 차게 그림
+        if (backgroundImage != null) {
+            g.drawImage(backgroundImage, 0, 0, getWidth(), getHeight(), this);
         }
     }
 
