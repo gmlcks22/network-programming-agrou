@@ -51,10 +51,18 @@ public class LoginPanel extends JPanel {
         nicknameField = new JTextField(20);
         loginButton = new JButton("로그인");
 
+        // IP와 포트 기본값 입력 (Placeholder 대체)
+        ipField.setText("127.0.0.1");
+        portField.setText("9000");
+
+        // 랜덤 닉네임
+         int randomId = (int)(Math.random() * 1000);
+         nicknameField.setText("Player" + randomId);
+
         // Placeholder 텍스트 구현
-        addPlaceholder(ipField, "서버 ip");
-        addPlaceholder(portField, "포트번호");
-        addPlaceholder(nicknameField, "닉네임");
+//        addPlaceholder(ipField, "서버 ip");
+//        addPlaceholder(portField, "포트번호");
+//        addPlaceholder(nicknameField, "닉네임");
 
         // 컴포넌트 크기 설정 (일관된 크기)
         Dimension fieldSize = new Dimension(250, 40);
@@ -104,6 +112,11 @@ public class LoginPanel extends JPanel {
             public void actionPerformed(ActionEvent e) {
                 tryConnect();
             }
+        });
+        // 닉네임 텍스트 필드에서 엔터키 입력 시 로그인
+        nicknameField.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) { tryConnect(); }
         });
     }
 
