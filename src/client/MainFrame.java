@@ -216,7 +216,11 @@ public class MainFrame extends JFrame {
                             "사랑에 빠짐",
                             JOptionPane.INFORMATION_MESSAGE);
                 }
-            } // 게임 종료 수신
+            } else if (message.equals(Protocol.CMD_HUNTER_TURN)) {
+                if (gamePanel != null) {
+                    gamePanel.enableHunterMode();
+                }
+            }// 게임 종료 수신
             else if (message.startsWith(Protocol.CMD_GAMEOVER)) {
                 String resultMsg = message.substring(Protocol.CMD_GAMEOVER.length() + 1).trim();
                 JOptionPane.showMessageDialog(this, resultMsg);

@@ -14,6 +14,7 @@ public class GameEngine {
     private static final int TIME_DISCUSSION = 60;  // 낮 토론 60초
     private static final int TIME_VOTE = 30;        // 투표 30초
     private static final int TIME_NIGHT = 30;       // 밤 30초
+    private static final int TIME_HUNTER = 15;      // 사냥꾼 제한 시간 15초
 
     public GameEngine(GameRoom room) {
         this.room = room;
@@ -86,6 +87,14 @@ public class GameEngine {
                 duration = TIME_VOTE;
                 msg = "[투표] 투표 시간입니다. 처형할 사람을 선택하세요. (" + duration + "초)";
                 break;
+            case HUNTER_REVENGE:
+                duration = TIME_HUNTER;
+                // 사냥꾼 페이즈는 '낮' 취급? 혹은 별도?
+                // 채팅을 위해 setIsNight(false)로 두거나, ClientHandler에서 이 페이즈일 때 채팅 허용해야 함
+                room.setIsNight(false);
+                room.broadcastMessage("[System] ☠️ 사냥꾼이 사망했습니다! 15초 내에 저승 길동무를 선택합니다.");
+                room.broadcastMessage("[System] 생존자들은 사냥꾼에게 최후의 변론을 할 수 있습니다.");
+                break;
             case NIGHT_ACTION:
                 duration = TIME_NIGHT;
                 msg = "[밤] 밤이 되었습니다. 능력을 사용하세요. (" + duration + "초)";
@@ -121,6 +130,10 @@ public class GameEngine {
                 processVotingResult();
                 // 게임이 안 끝났으면 밤으로
                 break;
+            case HUNTER_REVENGE:
+                room.broadcastMessage("[System] 사냥꾼이 망설이다가 숨을 거두었습니다...");
+                startPhase(GamePhase.NIGHT_ACTION);
+                break;
             case NIGHT_ACTION:
                 processNight();
                 // 게임이 안 끝났으면 낮으로
@@ -131,14 +144,25 @@ public class GameEngine {
         }
     }
 
+    public void resumeAfterHunter() {
+        if (currentPhase == GamePhase.HUNTER_REVENGE) {
+            System.out.println("[GameEngine] 사냥꾼 발포 완료. 밤으로 전환합니다.");
+            startPhase(GamePhase.NIGHT_ACTION);
+        }
+    }
+
     // 낮 투표 결과 처리
     private void processVotingResult() {
-        room.broadcastMessage("[System] 투표 시간이 종료되었습니다. (집계 로직 미구현으로 넘어갑니다)");
-        boolean isGameEnded = room.processDayVoting();
+        room.broadcastMessage("[System] 투표 시간이 종료되었습니다.");
+        int result = room.processDayVoting();
 
-        if (isGameEnded) {
-            stopEngine();   // 타이머 완전 정지
+        if (result == 1) {
+            stopEngine(); // 게임 종료
+        } else if (result == 2) {
+            // ★ 사냥꾼 발동 -> 사냥꾼 페이즈 시작
+            startPhase(GamePhase.HUNTER_REVENGE);
         } else {
+            // 아무 일 없음 or 일반 시민 사망 -> 밤으로 이동
             startPhase(GamePhase.NIGHT_ACTION);
         }
     }
@@ -246,11 +270,11 @@ public class GameEngine {
             case "마녀":
                 return new CitizenRole("마녀");
             case "사냥꾼":
-                return new CitizenRole("사냥꾼");
+                return new HunterRole();
             case "천사":
                 return new CitizenRole("천사");
             case "큐피드":
-                return new CupidRole();                
+                return new CupidRole();
             case "시민":
                 return new CitizenRole(); // 기본값 "시민"
             default:

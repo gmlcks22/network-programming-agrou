@@ -6,7 +6,6 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.HashMap;
@@ -14,7 +13,6 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import javax.swing.*;
-import javax.swing.border.TitledBorder;
 
 public class GamePanel extends JPanel {
 
@@ -58,6 +56,8 @@ public class GamePanel extends JPanel {
     // 큐피드
     private boolean isLover = false; // 내가 연인인지 여부
     private Set<String> cupidTargets = new HashSet<>(); // 큐피드용 타겟 저장소
+    // 사냥꾼 발포 모드 여부
+    private boolean isHunterMode = false;
     // 직업 설명 데이터 (기존 유지)
     private static final Map<String, String> ROLE_DESCRIPTIONS = new HashMap<>();
 
@@ -358,7 +358,31 @@ public class GamePanel extends JPanel {
 
     // 플레이어 버튼 클릭 시 처리
     private void handlePlayerClick(String targetName) {
-        // ★ 내가 죽었으면 아무것도 못함
+        // 1. 사냥꾼 모드일 때
+        if (isHunterMode) {
+            int confirm = JOptionPane.showConfirmDialog(this,
+                    "정말 '" + targetName + "' 님을 쏘시겠습니까?",
+                    "최후의 한 발", JOptionPane.YES_NO_OPTION);
+
+            if (confirm == JOptionPane.YES_OPTION) {
+                try {
+                    if (mainFrame.getSocket() != null) {
+                        PrintWriter out = new PrintWriter(mainFrame.getSocket().getOutputStream(), true);
+                        out.println(Protocol.CMD_HUNTER_SHOT + " " + targetName);
+
+                        // 발포 후 모드 해제 및 다시 비활성화
+                        isHunterMode = false;
+                        setTargetSelectionEnabled(false);
+                        appendMessage("[System] 발포했습니다.");
+                    }
+                } catch (IOException ex) {
+                    ex.printStackTrace();
+                }
+            }
+            return; // 여기서 종료
+        }
+
+        // 2. 일반적인 사망자 (행동 불가)        
         if (amIDead) {
             JOptionPane.showMessageDialog(this, "사망자는 행동할 수 없습니다.");
             return;
@@ -431,6 +455,25 @@ public class GamePanel extends JPanel {
             setTargetSelectionEnabled(true);
             appendMessage("[System] 투표 시간입니다. 처형할 대상을 선택하세요.");
             canChat = true;
+        } else if (phase.equals("HUNTER_REVENGE")) {
+            phaseLabel.setText("☠️ 사냥꾼의 복수");
+            phaseLabel.setForeground(Color.RED);
+
+            // 모두 채팅 가능 (살려달라고 빌어야 함)
+            canChat = true;
+            if (chatModeCombo.isVisible()) {
+                chatModeCombo.setSelectedItem("전체");
+            }
+
+            if (myRoleName.equals("사냥꾼") && amIDead) {
+                // 나는 죽은 사냥꾼이다 -> 타겟 선택 활성화
+                setTargetSelectionEnabled(true);
+                appendMessage("[System] 당신은 죽었습니다. 제한시간 내에 길동무를 선택하세요!");
+            } else {
+                // 다른 사람들은 선택 불가
+                setTargetSelectionEnabled(false);
+                appendMessage("[System] 사냥꾼이 총을 겨누고 있습니다! 채팅으로 설득하세요.");
+            }
         } else if (phase.equals("NIGHT_ACTION")) {
             phaseLabel.setText("🌙 밤 (능력 사용)");
             phaseLabel.setForeground(new Color(0, 0, 100));
@@ -453,8 +496,13 @@ public class GamePanel extends JPanel {
 
         // 내가 죽었으면 채팅, 행동 모두 강제 비활성화
         if (amIDead) {
-            canChat = false;
+            canChat = false; // 기본적으로 죽으면 채팅 불가 (유령챗 제외)
             setTargetSelectionEnabled(false);
+
+            // 사냥꾼 페이즈이고 내가 사냥꾼이면 타겟 선택은 가능해야 함
+            if (phase.equals("HUNTER_REVENGE") && myRoleName.equals("사냥꾼")) {
+                setTargetSelectionEnabled(true);
+            }
         }
 
         setChatEnabled(canChat);
@@ -526,7 +574,19 @@ public class GamePanel extends JPanel {
         }
     }
 
-    // 연인이 되었을 때 호출할 메소드 (MainFrame에서 호출 예정)
+    // 사냥꾼 모드 활성화
+    public void enableHunterMode() {
+        this.isHunterMode = true;
+        // 죽었어도 타겟 선택 가능하게 잠시 활성화
+        setTargetSelectionEnabled(true);
+        JOptionPane.showMessageDialog(this,
+                "당신은 죽었습니다.\n하지만 사냥꾼의 능력으로 저승 길동무를 선택할 수 있습니다!",
+                "발포 기회", JOptionPane.WARNING_MESSAGE);
+
+        appendMessage("[System] 총을 쏠 대상을 선택하세요 (제한시간 없음)");
+    }
+
+    // 연인이 되었을 때 호출할 메소드
     public void enableLoverChat() {
         // 중복 방지 체크 후 추가
         boolean hasLoverOption = false;

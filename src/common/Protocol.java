@@ -8,6 +8,7 @@ public class Protocol {
     public static final String CMD_LEAVE = "/leave";
     public static final String CMD_START = "/start";
     public static final String CMD_LOVER_ASSIGN = "/loverassign";
+    public static final String CMD_HUNTER_SHOT = "/huntershot"; // 헌터 사격
 
 // 채팅 관련
     public static final String CMD_CHAT = "/chat";          // 전체 채팅
@@ -23,7 +24,7 @@ public class Protocol {
     public static final String RESP_JOIN_OK = "join_ok";
     public static final String RESP_CREATE_OK = "create_ok";
     public static final String RESP_JOIN_FAIL = "join_fail";
-
+    public static final String CMD_HUNTER_TURN = "/hunterturn"; // 헌터 쏠 기회
     // 시스템 알림
     public static final String CMD_USERLIST = "/userlist";
     public static final String CMD_ROOMLIST = "/roomlist";

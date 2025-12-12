@@ -283,12 +283,13 @@ public class GameRoom {
     }
 
     // 2. 투표 결과 집계 및 처형 (GameEngine이 투표 시간 종료 시 호출)
-    public boolean processDayVoting() {
-        boolean isGameEnded = false;    // 게임 종료 여부 플래그
+    public int processDayVoting() {
+
 
         if (dayVotes.isEmpty()) {
             broadcastMessage("[System] 투표가 없어 아무도 처형되지 않았습니다.");
-            return false;
+            dayVotes.clear();
+            return 0;
         }
 
         // 득표수 계산
@@ -313,17 +314,31 @@ public class GameRoom {
             }
         }
 
-        // 결과 처리
+        dayVotes.clear(); // 투표함 비우기
+
         if (maxTarget != null && !isTie) {
             broadcastMessage("[System] 투표 결과, '" + maxTarget + "' 님이 최다 득표로 처형됩니다.");
-            isGameEnded = killUser(maxTarget);
+
+            // 처형 대상자 객체 찾기
+            ClientHandler victim = findClientByNickname(maxTarget);
+            boolean isHunter = (victim != null && "사냥꾼".equals(victim.getRoleName()));
+
+            // 유저 사망 처리
+            boolean gameEnded = killUser(maxTarget, "VOTE");
+
+            if (gameEnded) {
+                return 1; // 게임 종료
+            }
+            // ★ 게임이 안 끝났는데 죽은 사람이 사냥꾼이라면?
+            if (isHunter) {
+                return 2; // 사냥꾼 이벤트 발생 신호
+            }
+
+            return 0; // 일반 진행
         } else {
             broadcastMessage("[System] 동점표가 발생하여 아무도 처형되지 않았습니다.");
+            return 0;
         }
-
-        // 투표함 초기화
-        dayVotes.clear();
-        return isGameEnded;
     }
 
     // 3. 유저 사망 처리
@@ -337,9 +352,11 @@ public class GameRoom {
         if (victim != null && !victim.isDead()) {
             victim.setDead(true);
 
-            // 사망 메시지 전송
-            if (cause.equals("HEARTBREAK")) {
+            // 메시지 처리
+            if ("HEARTBREAK".equals(cause)) {
                 broadcastMessage("[System] 비극적인 사랑! '" + targetNickname + "' 님이 연인을 따라 스스로 목숨을 끊었습니다.");
+            } else if ("HUNTER".equals(cause)) { // ★ 사냥꾼에게 맞은 경우
+                broadcastMessage("[System] 탕! 사냥꾼의 총에 맞아 '" + targetNickname + "' 님이 사망했습니다.");
             } else {
                 broadcastMessage("[System] '" + targetNickname + "' 님이 사망했습니다.");
             }
@@ -347,26 +364,51 @@ public class GameRoom {
             victim.sendMessage("[System] 당신은 사망했습니다...");
             broadcastMessage(Protocol.CMD_DEATH + " " + targetNickname);
 
-            // 연인 체크: 내가 죽으면 내 연인도 죽는다 (원인이 상사병이 아닐 때만 발동하여 무한루프 방지)
-            if (!cause.equals("HEARTBREAK") && lovers.containsKey(targetNickname)) {
+            // 연인 체크
+            if (!"HEARTBREAK".equals(cause) && lovers.containsKey(targetNickname)) {
                 String partnerName = lovers.get(targetNickname);
                 ClientHandler partner = findClientByNickname(partnerName);
-
                 if (partner != null && !partner.isDead()) {
-                    // 파트너를 '상사병(HEARTBREAK)'으로 죽임 -> 사냥꾼/천사 능력 발동 안 함
                     killUser(partnerName, "HEARTBREAK");
                 }
             }
 
-            // 사냥꾼/천사 능력 발동 체크 (상사병으로 죽은 경우 발동 안 함)
-            if (!cause.equals("HEARTBREAK")) {
-                // TODO: 사냥꾼(Hunter)이나 천사(Angel)라면 여기서 능력 발동 로직 호출
-                // if (victim.getRoleName().equals("사냥꾼")) { ... }
+            // 사냥꾼 능력 발동 체크 
+            // (상사병으로 죽은 게 아니고, 직접 처형/살해 당했을 때만 발동)
+            if (!"HEARTBREAK".equals(cause) && "사냥꾼".equals(victim.getRoleName())) {
+                broadcastMessage("[System] 사냥꾼이 마지막 힘을 짜내어 총을 겨눕니다...");
+                victim.sendMessage(Protocol.CMD_HUNTER_TURN); // 사냥꾼에게만 발포 기회 전송
+                // 주의: 사냥꾼이 쏘기 전까지 게임이 끝나지 않도록, checkWinCondition을 
+                // 사냥꾼 발포 후에 한 번 더 체크해야 할 수도 있음.
             }
 
             return checkWinCondition();
         }
         return false;
+    }
+
+    // 사냥꾼 발포 처리
+    public synchronized void processHunterShot(ClientHandler hunter, String targetName) {
+        // 이미 죽었지만(isDead=true), 사냥꾼 로직을 위해 잠시 허용됨
+        if (!"사냥꾼".equals(hunter.getRoleName())) {
+            return;
+        }
+
+        broadcastMessage("[System] 탕! 사냥꾼 '" + hunter.getNickname() + "' 님이 마지막 힘으로 '" + targetName + "' 님을 쏘았습니다!");
+
+        boolean gameEnded = killUser(targetName, "HUNTER");
+
+        if (!gameEnded) {
+            // 게임이 안 끝났으면 밤으로 강제 이동
+            finishHunterPhase();
+        }
+    }
+
+    public void finishHunterPhase() {
+        // GameEngine에게 다음 단계(밤)로 가라고 지시
+        if (gameEngine != null) {
+            gameEngine.resumeAfterHunter();
+        }
     }
 
     // 승리 조건 판단 (연인 승리 추가)

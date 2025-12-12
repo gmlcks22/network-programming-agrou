@@ -184,6 +184,14 @@ public class ClientHandler implements Runnable {
                     if (currentRoom != null) {
                         currentRoom.broadcastLoverMessage(nickname, chatMsg);
                     }
+                } else if (message.startsWith(Protocol.CMD_HUNTER_SHOT)) {
+                    // 사냥꾼인지 확인 (죽은 상태여도 쏠 수 있어야 함)
+                    if (role != null && "사냥꾼".equals(role.getName())) {
+                        String targetName = message.substring(Protocol.CMD_HUNTER_SHOT.length() + 1).trim();
+                        if (currentRoom != null) {
+                            currentRoom.processHunterShot(this, targetName);
+                        }
+                    }
                 } else if (message.startsWith(Protocol.CMD_LEAVE)) {
                     if (currentRoom != null) {
                         currentRoom.removeClient(this); // 방에서 제거, 안내방송, 유저목록
