@@ -29,6 +29,9 @@ public class GameRoom {
 
     private int dayNumber = 0;
 
+    // 게임 종료 중복 처리를 막기 위한 플래그
+    private boolean isGameEnded = false;
+
     //  생성자: customRoleConfig 추가
     public GameRoom(String roomName, String customRoleConfig) {
         this.roomName = roomName;
@@ -123,20 +126,21 @@ public class GameRoom {
         handler.setCurrentRoom(null); // 클라이언트의 소속 방 정보를 null로
 
         if (clientsInRoom.isEmpty()) {
-            // 1. 남은 사람이 없으면 방 폭파 (RoomManager에게 삭제 요청)
+            // 남은 사람이 없으면 방 폭파 (RoomManager에게 삭제 요청)
             Server.ROOM_MANAGER.removeRoom(this);
         } else {
-            // 2. 사람이 남아있으면 퇴장 알림 및 목록 갱신
+            // 방장이 나가면 위임
+            if (handler == creator && !clientsInRoom.isEmpty()) {
+                creator = clientsInRoom.get(0);
+                broadcastMessage("[System] 방장이 " + creator.getNickname() + "님으로 변경되었습니다.");
+            }
             broadcastMessage("[System] '" + handler.getNickname() + "' 님이 방을 나갔습니다.");
             broadcastUserList();
 
-            if (isPlaying) {
-                // 나간 사람을 사망 처리한 것으로 간주하고 승리 조건 체크
-                // (혹은 단순히 인원수 변동에 따른 승리 체크)
-                boolean isGameEnded = checkWinCondition();
-                if (isGameEnded && gameEngine != null) {
-                    gameEngine.stopEngine();
-                }
+            // 게임 중이고, 아직 종료되지 않았을 때만 승리 조건 체크
+            if (isPlaying && !isGameEnded) {
+                // 나간 사람을 'DISCONNECT' 원인으로 사망 처리 (이 과정에서 승리 체크됨)
+                killUser(handler.getNickname(), "DISCONNECT");
             }
         }
     }
@@ -495,6 +499,13 @@ public class GameRoom {
 
     // 5. 게임 종료 처리
     private void endGame(String resultMsg) {
+        if (isGameEnded) {
+            return; // 이미 종료 처리 중이면 무시
+
+        }
+        isGameEnded = true;      // 종료 플래그 설정
+        isPlaying = false;       // 게임 중 상태 해제
+
         broadcastMessage("=================================");
         broadcastMessage("[GAME OVER] " + resultMsg);
         broadcastMessage("=================================");
@@ -502,9 +513,22 @@ public class GameRoom {
         // 클라이언트에게 게임 종료 신호 전송
         broadcastMessage(Protocol.CMD_GAMEOVER + " " + resultMsg);
 
-        // GameEngine 멈추기 (구현 필요 시 Engine에 stop 메소드 추가)
-        // gameEngine.stop();
-        // (선택) 게임 종료 후 방 폭파 또는 초기화 로직
+        if (gameEngine != null) {
+            gameEngine.stopEngine();
+        }
+
+        // 방에 있는 모든 유저의 '현재 방' 정보를 null로 초기화 (방에서 내보냄)
+        for (ClientHandler client : clientsInRoom) {
+            client.setCurrentRoom(null);
+        }
+
+        // 리스트 비우기
+        clientsInRoom.clear();
+
+        // 서버의 방 목록 관리자(RoomManager)에서 이 방을 삭제
+        Server.ROOM_MANAGER.removeRoom(this);
+
+        System.out.println("[Server] 게임 종료로 인해 '" + roomName + "' 방이 삭제되었습니다.");
     }
 
     // 헬퍼: 닉네임으로 객체 찾기
