@@ -386,8 +386,30 @@ public class GamePanel extends JPanel {
             PrintWriter out = new PrintWriter(mainFrame.getSocket().getOutputStream(), true);
 
             if ("DAY_VOTE".equals(currentPhase)) {
-                out.println(Protocol.CMD_VOTE + " " + targetName);
-                appendMessage("[시스템] '" + targetName + "' 님에게 투표했습니다.");
+
+                // 독재자일 경우 선택지 제공
+                if ("독재자".equals(myRoleName)) {
+                    Object[] options = {"투표하기", "쿠데타(능력사용)", "취소"};
+                    int choice = JOptionPane.showOptionDialog(this,
+                            "'" + targetName + "' 님에게 무엇을 하시겠습니까?\n(쿠데타는 게임 중 1번만 가능하며, 즉시 처형합니다.)",
+                            "독재자 능력 선택",
+                            JOptionPane.YES_NO_CANCEL_OPTION,
+                            JOptionPane.QUESTION_MESSAGE,
+                            null,
+                            options,
+                            options[0]);
+
+                    if (choice == 0) { // 투표하기
+                        out.println(Protocol.CMD_VOTE + " " + targetName);
+                        appendMessage("[System] '" + targetName + "' 님에게 투표했습니다.");
+                    } else if (choice == 1) { // 쿠데타
+                        out.println(Protocol.CMD_DICTATOR_COUP + " " + targetName);
+                    }
+                } // 일반 유저는 그냥 투표
+                else {
+                    out.println(Protocol.CMD_VOTE + " " + targetName);
+                    appendMessage("[System] '" + targetName + "' 님에게 투표했습니다.");
+                }
             } else if ("NIGHT_ACTION".equals(currentPhase)) {
 
                 if (myRoleName.equals("큐피드")) {

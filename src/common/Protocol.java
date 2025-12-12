@@ -9,6 +9,7 @@ public class Protocol {
     public static final String CMD_START = "/start";
     public static final String CMD_LOVER_ASSIGN = "/loverassign";
     public static final String CMD_HUNTER_SHOT = "/huntershot"; // 헌터 사격
+    public static final String CMD_DICTATOR_COUP = "/dictator"; // 독재자 쿠데타 명령어
 
 // 채팅 관련
     public static final String CMD_CHAT = "/chat";          // 전체 채팅

@@ -352,6 +352,14 @@ public class GameRoom {
         }
     }
 
+    // 독재자 쿠데타 요청 (ClientHandler -> GameRoom -> GameEngine)
+    public void dictatorCoup(ClientHandler dictator, String targetName) {
+        // 여기서도 페이즈 체크를 한 번 더 하면 좋음
+        // (GameEngine이 private이라 직접 페이즈 체크가 어려우면 생략 가능하지만 안전장치 권장)
+
+        gameEngine.triggerDictatorCoup(dictator.getNickname(), targetName);
+    }
+
     // 3. 유저 사망 처리
     public boolean killUser(String targetNickname) {
         return killUser(targetNickname, "GENERAL");
@@ -377,6 +385,8 @@ public class GameRoom {
                 broadcastMessage("[System] 비극적인 사랑! '" + targetNickname + "' 님이 연인을 따라 스스로 목숨을 끊었습니다.");
             } else if ("HUNTER".equals(cause)) {
                 broadcastMessage("[System] 탕! 사냥꾼의 총에 맞아 '" + targetNickname + "' 님이 사망했습니다.");
+            } else if ("DICTATOR".equals(cause)) {
+                broadcastMessage("[System] '" + targetNickname + "' 님이 독재자에 의해 처형되었습니다.");
             } else if ("VOTE".equals(cause)) {
                 broadcastMessage("[System] 투표 결과, '" + targetNickname + "' 님이 처형되었습니다.");
             } else {

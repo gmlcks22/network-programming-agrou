@@ -156,6 +156,35 @@ public class GameEngine {
         }
     }
 
+    // 독재자 쿠데타 발동 로직
+    public synchronized void triggerDictatorCoup(String dictatorName, String targetName) {
+        // 1. 돌아가던 투표 타이머 취소 (핵심!)
+        if (gameTimer != null) {
+            gameTimer.cancel();
+            gameTimer = null;
+        }
+
+        // 2. 전체 알림
+        room.broadcastMessage("=============================================");
+        room.broadcastMessage("[속보] 독재자 '" + dictatorName + "' 님이 쿠데타를 선포했습니다!");
+        room.broadcastMessage("[속보] 투표가 즉시 중단되며, 독재자의 권한으로 '" + targetName + "' 님을 즉결 처형합니다.");
+        room.broadcastMessage("=============================================");
+
+        // 3. 처형 집행 (원인: DICTATOR)
+        boolean gameEnded = room.killUser(targetName, "DICTATOR");
+
+        // 4. 게임이 안 끝났으면 잠시 후 밤으로 강제 이동
+        if (!gameEnded) {
+            // 연출을 위해 3초 정도 딜레이 후 밤으로
+            new java.util.Timer().schedule(new java.util.TimerTask() {
+                @Override
+                public void run() {
+                    startPhase(GamePhase.NIGHT_ACTION);
+                }
+            }, 3000L);
+        }
+    }
+
     // 낮 투표 결과 처리
     private void processVotingResult() {
         room.broadcastMessage("[System] 투표 시간이 종료되었습니다.");
@@ -271,7 +300,7 @@ public class GameEngine {
 
             // 특수 직업들을 한글 이름으로 생성
             case "독재자":
-                return new CitizenRole("독재자");
+                return new DictatorRole();
             case "마녀":
                 return new CitizenRole("마녀");
             case "사냥꾼":

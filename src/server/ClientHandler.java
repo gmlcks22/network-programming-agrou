@@ -192,6 +192,30 @@ public class ClientHandler implements Runnable {
                             currentRoom.processHunterShot(this, targetName);
                         }
                     }
+                } else if (message.startsWith(Protocol.CMD_DICTATOR_COUP)) {
+                    if (isDead) {
+                        sendMessage("[System] 사망자는 행동할 수 없습니다.");
+                        continue;
+                    }
+
+                    // 독재자인지 확인 (타입 캐스팅 필요)
+                    if (role instanceof server.roles.DictatorRole) {
+                        server.roles.DictatorRole dictatorRole = (server.roles.DictatorRole) role;
+
+                        if (dictatorRole.canUseAbility()) {
+                            String target = message.substring(Protocol.CMD_DICTATOR_COUP.length() + 1).trim();
+                            // 능력 사용 처리 (여기서 true로 만듦)
+                            dictatorRole.setAbilityUsed(true);
+
+                            if (currentRoom != null) {
+                                currentRoom.dictatorCoup(this, target);
+                            }
+                        } else {
+                            sendMessage("[System] 이미 능력을 사용했습니다.");
+                        }
+                    } else {
+                        sendMessage("[System] 당신은 독재자가 아닙니다.");
+                    }
                 } else if (message.startsWith(Protocol.CMD_LEAVE)) {
                     if (currentRoom != null) {
                         currentRoom.removeClient(this); // 방에서 제거, 안내방송, 유저목록
