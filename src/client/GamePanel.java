@@ -692,4 +692,53 @@ public class GamePanel extends JPanel {
             return null;
         }
     }
+
+    // 게임 상태 초기화 메소드
+    public void reset() {
+        // 1. 데이터 초기화
+        this.deadPlayers.clear();
+        this.amIDead = false;
+        this.currentPhase = "WAITING";
+        this.remainingSeconds = 0;
+        this.survivorCount = 0;
+        this.myRoleName = "시민";
+        this.myFaction = "Citizen";
+
+        // 2. UI 텍스트 초기화
+        chatArea.setText("");
+        chatField.setText("");
+        if (phaseLabel != null) {
+            phaseLabel.setText("게임 대기 중");
+        }
+        if (timerLabel != null) {
+            timerLabel.setText("-");
+        }
+        if (survivorCountLabel != null) {
+            survivorCountLabel.setText("생존자: 0명");
+        }
+
+        // 3. 콤보박스 초기화 (전체 채팅으로 복구)
+        if (chatModeCombo != null) {
+            chatModeCombo.removeAllItems();
+            chatModeCombo.addItem("전체");
+            chatModeCombo.setSelectedItem("전체");
+            chatModeCombo.setVisible(false);
+            chatModeCombo.setEnabled(true);
+        }
+
+        // 4. 입력창 활성화
+        setChatEnabled(true);
+        setTargetSelectionEnabled(false);
+
+        // 5. 버튼 패널 비우기
+        if (playerGridPanel != null) {
+            playerGridPanel.removeAll();
+        }
+        if (targetSelectionPanel != null) {
+            targetSelectionPanel.removeAll();
+        }
+
+        revalidate();
+        repaint();
+    }
 }

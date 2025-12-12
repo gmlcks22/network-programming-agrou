@@ -49,6 +49,9 @@ public class GameEngine {
             ClientHandler client = clients.get(i);
             Role assignedRole = rolesToAssign.get(i);
 
+            // 새 게임 시작 시 생존 상태 초기화
+            client.setDead(false);
+
             client.setRole(assignedRole);
             client.sendMessage(
                     Protocol.CMD_ROLE_ASSIGN + " " + assignedRole.getName() + " " + assignedRole.getFaction()

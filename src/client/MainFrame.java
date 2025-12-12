@@ -118,6 +118,9 @@ public class MainFrame extends JFrame {
 
             // === 방 입장/생성 관련 처리 ===
             if (message.equals(Protocol.RESP_JOIN_OK) || message.equals(Protocol.RESP_CREATE_OK)) {
+                if (waitingPanel != null) {
+                    waitingPanel.reset(); // 대기방 채팅 청소
+                }
                 // 방 입장 성공 -> 대기방으로
                 changePanel(WAITING_PANEL);
             } else if (message.startsWith(Protocol.RESP_JOIN_FAIL)) {
@@ -156,6 +159,7 @@ public class MainFrame extends JFrame {
 
                 // 1. GamePanel에 내 직업 정보 설정
                 if (gamePanel != null) {
+                    gamePanel.reset(); // 게임 데이터/채팅 청소
                     gamePanel.setMyRole(roleName, faction);
                 }
 

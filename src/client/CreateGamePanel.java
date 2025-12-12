@@ -4,6 +4,8 @@ import common.Protocol;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.ComponentAdapter;
+import java.awt.event.ComponentEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.io.File;
@@ -315,10 +317,16 @@ public class CreateGamePanel extends JPanel {
         });
 
         // 이 패널이 화면에 보일 때마다 자동으로 초기화 실행
+        this.addComponentListener(new ComponentAdapter() {
+            @Override
+            public void componentShown(ComponentEvent e) {
+                reset(); // 패널이 보일 때 리셋
+            }
+        });
     }
 
     // 화면 데이터를 처음 상태로 리셋하는 메소드
-    private void resetData() {
+    public void reset() {
         // 인원수 리셋
         currentPopulation = 4;
         populationLabel.setText(currentPopulation + "명");
