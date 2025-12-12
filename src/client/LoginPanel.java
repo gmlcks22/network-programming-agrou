@@ -26,7 +26,6 @@ public class LoginPanel extends JPanel {
         this.mainFrame = mainFrame;
 
         // 기본 설정 (백그라운드, 전체 레이아웃)
-        //this.setBackground(Color.WHITE);
         this.setLayout(new BorderLayout(10, 10)); // 전체 레이아웃 (북, 중앙)
         this.setBorder(BorderFactory.createEmptyBorder(50, 50, 50, 50));
 
@@ -38,12 +37,10 @@ public class LoginPanel extends JPanel {
 
         // 폼 패널 (Center)
         JPanel formWrapperPanel = new JPanel(new GridBagLayout());
-        //formWrapperPanel.setBackground(Color.WHITE); // 배경색 통일
 
         // 실제 폼 컴포넌트(필드, 버튼)들을 담을 패널 (Y축으로 쌓음)
         JPanel formPanel = new JPanel();
         formPanel.setLayout(new BoxLayout(formPanel, BoxLayout.Y_AXIS));
-        //formPanel.setBackground(Color.WHITE);
 
         // 필드 및 버튼 생성
         ipField = new JTextField(20);
@@ -80,8 +77,6 @@ public class LoginPanel extends JPanel {
         ipField.setFont(fieldFont);
         portField.setFont(fieldFont);
         nicknameField.setFont(fieldFont);
-        
-        //loginButton.setBackground(new Color(220, 220, 220)); // 이미지와 유사한 회색
         loginButton.setFont(UIManager.getFont("defaultFont").deriveFont(Font.BOLD, (float)14));
 
         // 폼 패널에 컴포넌트 추가

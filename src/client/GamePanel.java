@@ -72,7 +72,6 @@ public class GamePanel extends JPanel {
     public GamePanel(MainFrame mainFrame) {
         this.mainFrame = mainFrame;
         setLayout(new BorderLayout());
-//        setBackground(new Color(245, 245, 250));
 
         initTopPanel();
         initCenterPanel();
@@ -82,7 +81,6 @@ public class GamePanel extends JPanel {
 
     private void initTopPanel() {
         JPanel topPanel = new JPanel(new BorderLayout());
-//        topPanel.setBackground(new Color(230, 230, 240));
         topPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
 
         // 1. 좌측 (WEST)
@@ -135,7 +133,6 @@ public class GamePanel extends JPanel {
 
         // 설명 패널
         JPanel descriptionPanel = new JPanel(new BorderLayout());
-//        descriptionPanel.setBackground(new Color(255, 255, 240));
         descriptionPanel.setBorder(BorderFactory.createTitledBorder("직업 설명"));
         roleDescriptionLabel = new JLabel("직업 이미지를 클릭하면 설명이 여기에 표시됩니다.");
         roleDescriptionLabel.setFont(UIManager.getFont("defaultFont").deriveFont(Font.PLAIN, (float)16));
@@ -156,7 +153,6 @@ public class GamePanel extends JPanel {
     private void initRightPanel() {
         targetSelectionPanel = new JPanel();
         targetSelectionPanel.setLayout(new BoxLayout(targetSelectionPanel, BoxLayout.Y_AXIS));
-//        targetSelectionPanel.setBackground(new Color(240, 245, 255));
         targetSelectionPanel.setBorder(BorderFactory.createTitledBorder("대상 선택"));
         targetSelectionPanel.setPreferredSize(new Dimension(180, 0));
         setTargetSelectionEnabled(false);
@@ -198,7 +194,6 @@ public class GamePanel extends JPanel {
         // 도감 패널
         roleBookPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 15, 10));
         roleBookPanel.setBorder(BorderFactory.createTitledBorder("직업 도감"));
-//        roleBookPanel.setBackground(new Color(250, 250, 245));
         JScrollPane bookScrollPane = new JScrollPane(roleBookPanel);
         bookScrollPane.setBorder(null);
         bottomPanel.add(bookScrollPane, BorderLayout.CENTER);
@@ -263,12 +258,10 @@ public class GamePanel extends JPanel {
                 
                 // 사망 여부에 따른 스타일 분기
                 if (deadPlayers.contains(nickname)) {
-//                    playerBtn.setBackground(Color.GRAY); // 회색 배경
                     playerBtn.setForeground(Color.DARK_GRAY);
                     playerBtn.setEnabled(false); // 클릭 불가
                     playerBtn.setText(nickname + " (사망)");
                 } else {
-//                    playerBtn.setBackground(new Color(220, 230, 255)); // 생존자 색상
                     playerBtn.setForeground(Color.BLACK);
                     playerBtn.setEnabled(true);
                 }
@@ -289,7 +282,6 @@ public class GamePanel extends JPanel {
             JButton playerBtn = new JButton(user);
             playerBtn.setAlignmentX(Component.CENTER_ALIGNMENT);
             playerBtn.setMaximumSize(new Dimension(160, 40));
-//            playerBtn.setBackground(Color.WHITE);
             
             // 사망자는 타겟 목록에서도 비활성화
             if (deadPlayers.contains(user)) {
@@ -322,7 +314,6 @@ public class GamePanel extends JPanel {
                 String nickname = text.replace(" (사망)", "");
                 
                 if (deadPlayers.contains(nickname)) {
-//                    btn.setBackground(Color.GRAY);
                     btn.setEnabled(false);
                     btn.setText(nickname + " (사망)");
                 }

@@ -202,7 +202,6 @@ public class CreateGamePanel extends JPanel {
 
         // 오른쪽 선택한 역할 패널---
         JPanel rightPanel = new JPanel(new BorderLayout());
-//        rightPanel.setBackground(Color.WHITE);
         rightPanel.setBorder(BorderFactory.createTitledBorder(
                 BorderFactory.createEtchedBorder(), "선택한 역할",
                 TitledBorder.LEFT, TitledBorder.TOP,
@@ -212,12 +211,10 @@ public class CreateGamePanel extends JPanel {
         // 역할 목록이 들어갈 내부 패널
         selectedRolesListPanel = new JPanel();
         selectedRolesListPanel.setLayout(new BoxLayout(selectedRolesListPanel, BoxLayout.Y_AXIS));
-//        selectedRolesListPanel.setBackground(Color.WHITE);
         selectedRolesListPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
 
         JScrollPane scrollPane = new JScrollPane(selectedRolesListPanel);
         scrollPane.setBorder(null);
-//        scrollPane.getViewport().setBackground(Color.WHITE);
 
         scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
         scrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
@@ -228,7 +225,6 @@ public class CreateGamePanel extends JPanel {
 
         // 하단 버튼
         JPanel bottomPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
-//        bottomPanel.setBackground(Color.WHITE);
 
         // 취소 버튼
         JButton cancelButton = new JButton("취소");
