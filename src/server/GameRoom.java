@@ -27,6 +27,8 @@ public class GameRoom {
     // 연인 관계 저장 (Key: 유저, Value: 파트너)
     private Map<String, String> lovers = new ConcurrentHashMap<>();
 
+    private int dayNumber = 0;
+
     //  생성자: customRoleConfig 추가
     public GameRoom(String roomName, String customRoleConfig) {
         this.roomName = roomName;
@@ -85,6 +87,16 @@ public class GameRoom {
 
     public int getCurrentPopulation() {
         return clientsInRoom.size();
+    }
+
+    // 날짜 증가 및 조회 메소드 (GameEngine에서 호출)
+    public void incrementDay() {
+        this.dayNumber++;
+        broadcastMessage("===== [ " + dayNumber + "일차 아침이 밝았습니다 ] =====");
+    }
+
+    public int getDayNumber() {
+        return dayNumber;
     }
 
     // --- 클라이언트 관리 ---
@@ -285,7 +297,6 @@ public class GameRoom {
     // 2. 투표 결과 집계 및 처형 (GameEngine이 투표 시간 종료 시 호출)
     public int processDayVoting() {
 
-
         if (dayVotes.isEmpty()) {
             broadcastMessage("[System] 투표가 없어 아무도 처형되지 않았습니다.");
             dayVotes.clear();
@@ -350,13 +361,24 @@ public class GameRoom {
         ClientHandler victim = findClientByNickname(targetNickname);
 
         if (victim != null && !victim.isDead()) {
+            // 천사 승리 조건 체크 (죽기 전에 처리)
+            // 1. 사망 원인이 투표(VOTE) 인가?
+            // 2. 현재가 1일차 인가?
+            // 3. 대상의 직업이 천사 인가?
+            if ("VOTE".equals(cause) && dayNumber == 1 && "천사".equals(victim.getRoleName())) {
+                broadcastMessage("[System] " + targetNickname + " 님은 천사였습니다! 하늘로 승천합니다.");
+                endGame("천사 팀 승리! (첫날 투표로 처형당하여 승리했습니다)");
+                return true; // 게임 종료
+            }
             victim.setDead(true);
 
             // 메시지 처리
             if ("HEARTBREAK".equals(cause)) {
                 broadcastMessage("[System] 비극적인 사랑! '" + targetNickname + "' 님이 연인을 따라 스스로 목숨을 끊었습니다.");
-            } else if ("HUNTER".equals(cause)) { // ★ 사냥꾼에게 맞은 경우
+            } else if ("HUNTER".equals(cause)) {
                 broadcastMessage("[System] 탕! 사냥꾼의 총에 맞아 '" + targetNickname + "' 님이 사망했습니다.");
+            } else if ("VOTE".equals(cause)) {
+                broadcastMessage("[System] 투표 결과, '" + targetNickname + "' 님이 처형되었습니다.");
             } else {
                 broadcastMessage("[System] '" + targetNickname + "' 님이 사망했습니다.");
             }
@@ -364,7 +386,7 @@ public class GameRoom {
             victim.sendMessage("[System] 당신은 사망했습니다...");
             broadcastMessage(Protocol.CMD_DEATH + " " + targetNickname);
 
-            // 연인 체크
+            // 연인 동반 사망 체크
             if (!"HEARTBREAK".equals(cause) && lovers.containsKey(targetNickname)) {
                 String partnerName = lovers.get(targetNickname);
                 ClientHandler partner = findClientByNickname(partnerName);

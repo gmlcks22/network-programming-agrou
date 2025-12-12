@@ -66,7 +66,7 @@ public class GamePanel extends JPanel {
         ROLE_DESCRIPTIONS.put("늑대인간", "마피아 진영입니다. 매일 밤 동료들과 상의하여 한 명의 시민을 살해할 수 있습니다.");
         ROLE_DESCRIPTIONS.put("경비병", "매일 밤 자신을 포함한 한 명을 선택하여 늑대인간의 공격으로부터 보호합니다.");
         ROLE_DESCRIPTIONS.put("선견자", "매일 밤 한 명을 선택하여 그 사람의 직업을 알아낼 수 있습니다.");
-        ROLE_DESCRIPTIONS.put("마녀", "게임 중 각 한 번씩, 사람을 살리는 약과 죽이는 약을 사용할 수 있습니다.");
+        ROLE_DESCRIPTIONS.put("마녀", "당신은 일회용 물약 2가지, 치료 물약과 독 물약을 가지고 시작합니다. 치료 물약은 사람을 사망으로부터 지켜낼 수 있고, 독 물약은 사람을 죽입니다.");
         ROLE_DESCRIPTIONS.put("사냥꾼", "자신이 사망할 때, 유언으로 다른 한 명을 지목하여 함께 데려갈 수 있습니다.");
         ROLE_DESCRIPTIONS.put("독재자", "투표 시간에 능력을 사용하여 혼자서 처형 대상을 결정할 수 있습니다. (1회)");
         ROLE_DESCRIPTIONS.put("천사", "첫날 낮 투표에서 처형당하면 즉시 게임에서 승리합니다.");
@@ -94,7 +94,7 @@ public class GamePanel extends JPanel {
         myRoleImageLabel.setPreferredSize(new Dimension(50, 50));
         myRoleImageLabel.setBorder(BorderFactory.createLineBorder(Color.GRAY));
         myRoleNameLabel = new JLabel("직업: " + myRoleName);
-        myRoleNameLabel.setFont(UIManager.getFont("defaultFont").deriveFont(Font.BOLD, (float)16));
+        myRoleNameLabel.setFont(UIManager.getFont("defaultFont").deriveFont(Font.BOLD, (float) 16));
         myRoleNameLabel.setBorder(BorderFactory.createEmptyBorder(0, 10, 0, 0));
         myRolePanel.add(myRoleImageLabel);
         myRolePanel.add(myRoleNameLabel);
@@ -104,10 +104,10 @@ public class GamePanel extends JPanel {
         JPanel statusPanel = new JPanel(new GridLayout(2, 1));
         statusPanel.setOpaque(false);
         phaseLabel = new JLabel("게임 대기 중");
-        phaseLabel.setFont(UIManager.getFont("defaultFont").deriveFont(Font.BOLD, (float)18));
+        phaseLabel.setFont(UIManager.getFont("defaultFont").deriveFont(Font.BOLD, (float) 18));
         phaseLabel.setHorizontalAlignment(SwingConstants.CENTER);
         timerLabel = new JLabel("-");
-        timerLabel.setFont(UIManager.getFont("defaultFont").deriveFont(Font.BOLD, (float)22));
+        timerLabel.setFont(UIManager.getFont("defaultFont").deriveFont(Font.BOLD, (float) 22));
         timerLabel.setForeground(new Color(200, 50, 50));
         timerLabel.setHorizontalAlignment(SwingConstants.CENTER);
         statusPanel.add(phaseLabel);
@@ -116,7 +116,7 @@ public class GamePanel extends JPanel {
 
         // 3. 우측 (EAST)
         survivorCountLabel = new JLabel("생존자: " + survivorCount + "명");
-        survivorCountLabel.setFont(UIManager.getFont("defaultFont").deriveFont(Font.BOLD, (float)20));
+        survivorCountLabel.setFont(UIManager.getFont("defaultFont").deriveFont(Font.BOLD, (float) 20));
         JPanel rightInfoPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
         rightInfoPanel.setOpaque(false);
         rightInfoPanel.add(survivorCountLabel);
@@ -139,7 +139,7 @@ public class GamePanel extends JPanel {
         JPanel descriptionPanel = new JPanel(new BorderLayout());
         descriptionPanel.setBorder(BorderFactory.createTitledBorder("직업 설명"));
         roleDescriptionLabel = new JLabel("직업 이미지를 클릭하면 설명이 여기에 표시됩니다.");
-        roleDescriptionLabel.setFont(UIManager.getFont("defaultFont").deriveFont(Font.PLAIN, (float)16));
+        roleDescriptionLabel.setFont(UIManager.getFont("defaultFont").deriveFont(Font.PLAIN, (float) 16));
         roleDescriptionLabel.setHorizontalAlignment(SwingConstants.CENTER);
         descriptionPanel.add(roleDescriptionLabel, BorderLayout.CENTER);
 
@@ -263,8 +263,8 @@ public class GamePanel extends JPanel {
                 }
 
                 JButton playerBtn = new JButton(nickname);
-                playerBtn.setFont(UIManager.getFont("defaultFont").deriveFont(Font.BOLD, (float)16));
-                
+                playerBtn.setFont(UIManager.getFont("defaultFont").deriveFont(Font.BOLD, (float) 16));
+
                 // 사망 여부에 따른 스타일 분기
                 if (deadPlayers.contains(nickname)) {
                     playerBtn.setForeground(Color.DARK_GRAY);
@@ -291,7 +291,7 @@ public class GamePanel extends JPanel {
             JButton playerBtn = new JButton(user);
             playerBtn.setAlignmentX(Component.CENTER_ALIGNMENT);
             playerBtn.setMaximumSize(new Dimension(160, 40));
-            
+
             // 사망자는 타겟 목록에서도 비활성화
             if (deadPlayers.contains(user)) {
                 playerBtn.setEnabled(false);

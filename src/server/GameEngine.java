@@ -61,12 +61,12 @@ public class GameEngine {
 
         room.broadcastMessage(Protocol.CMD_GAME_ROLES + " " + roleConfig);
 
-        room.setIsNight(false);
+        room.setIsNight(true);
         room.broadcastMessage("--- [게임 시작] ---");
-        room.broadcastMessage("[System] 직업이 배정되었습니다. 첫 번째 낮이 시작됩니다!");
+        room.broadcastMessage("[System] 직업이 배정되었습니다. 첫 번째 밤이 시작됩니다!");
 
         // 첫 번째 페이즈 시작 (타이머 가동)
-        startPhase(GamePhase.DAY_DISCUSSION);
+        startPhase(GamePhase.NIGHT_ACTION);
     }
 
     // 페이지 전환 및 타이머 시작
@@ -82,13 +82,15 @@ public class GameEngine {
 
         switch (nextPhase) {
             case DAY_DISCUSSION:
+                room.incrementDay();
+
                 duration = TIME_DISCUSSION;
-                msg = "[낮] 토론 시간입니다. (" + duration + "초)";
                 room.setIsNight(false);
+                room.broadcastMessage("[낮] 해가 떴습니다. 토론 시간입니다. (" + duration + "초)");
                 break;
             case DAY_VOTE:
                 duration = TIME_VOTE;
-                msg = "[투표] 투표 시간입니다. 처형할 사람을 선택하세요. (" + duration + "초)";
+                room.broadcastMessage("[투표] 투표 시간입니다. 처형할 사람을 선택하세요. (" + duration + "초)");
                 break;
             case HUNTER_REVENGE:
                 duration = TIME_HUNTER;
@@ -275,7 +277,7 @@ public class GameEngine {
             case "사냥꾼":
                 return new HunterRole();
             case "천사":
-                return new CitizenRole("천사");
+                return new AngelRole();
             case "큐피드":
                 return new CupidRole();
             case "시민":
