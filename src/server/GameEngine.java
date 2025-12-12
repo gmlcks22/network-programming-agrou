@@ -10,11 +10,11 @@ public class GameEngine {
     private Timer gameTimer;
     private GamePhase currentPhase = GamePhase.WAITING;
 
-    // 타이머 시간 설정 (초) todo 시간 조정 필요
-    private static final int TIME_DISCUSSION = 60;  // 낮 토론 60초
-    private static final int TIME_VOTE = 30;        // 투표 30초
-    private static final int TIME_NIGHT = 30;       // 밤 30초
-    private static final int TIME_HUNTER = 15;      // 사냥꾼 제한 시간 15초
+    // 타이머 시간 설정 (초)
+    private static final int TIME_DISCUSSION = 60;
+    private static final int TIME_VOTE = 30;
+    private static final int TIME_NIGHT = 30;
+    private static final int TIME_HUNTER = 15;
 
     public GameEngine(GameRoom room) {
         this.room = room;
@@ -61,68 +61,62 @@ public class GameEngine {
 
         room.broadcastMessage(Protocol.CMD_GAME_ROLES + " " + roleConfig);
 
+        // 시작 시 밤으로 설정
         room.setIsNight(true);
         room.broadcastMessage("--- [게임 시작] ---");
         room.broadcastMessage("[System] 직업이 배정되었습니다. 첫 번째 밤이 시작됩니다!");
 
-        // 첫 번째 페이즈 시작 (타이머 가동)
+        // 첫 번째 페이즈 시작 (밤)
         startPhase(GamePhase.NIGHT_ACTION);
     }
 
     // 페이지 전환 및 타이머 시작
     private void startPhase(GamePhase nextPhase) {
-        // 기존 타이머 취소
         if (gameTimer != null) {
             gameTimer.cancel();
         }
-
         this.currentPhase = nextPhase;
         int duration = 0;
-        String msg = "";
 
         switch (nextPhase) {
             case DAY_DISCUSSION:
-                room.incrementDay();
-
+                room.incrementDay(); // 날짜 증가
                 duration = TIME_DISCUSSION;
                 room.setIsNight(false);
-                room.broadcastMessage("[낮] 해가 떴습니다. 토론 시간입니다. (" + duration + "초)");
+                room.broadcastMessage("[낮] " + room.getDayNumber() + "일차 아침이 밝았습니다. 토론 시간입니다. (" + duration + "초)");
                 break;
+
             case DAY_VOTE:
                 duration = TIME_VOTE;
                 room.broadcastMessage("[투표] 투표 시간입니다. 처형할 사람을 선택하세요. (" + duration + "초)");
                 break;
+
             case HUNTER_REVENGE:
                 duration = TIME_HUNTER;
-                // 사냥꾼 페이즈는 '낮' 취급? 혹은 별도?
-                // 채팅을 위해 setIsNight(false)로 두거나, ClientHandler에서 이 페이즈일 때 채팅 허용해야 함
                 room.setIsNight(false);
                 room.broadcastMessage("[System] ☠️ 사냥꾼이 사망했습니다! 15초 내에 저승 길동무를 선택합니다.");
-                room.broadcastMessage("[System] 생존자들은 사냥꾼에게 최후의 변론을 할 수 있습니다.");
                 break;
+
             case NIGHT_ACTION:
                 duration = TIME_NIGHT;
-                msg = "[밤] 밤이 되었습니다. 능력을 사용하세요. (" + duration + "초)";
                 room.setIsNight(true);
+                room.broadcastMessage("[밤] 밤이 되었습니다. 능력을 사용하세요. (" + duration + "초)");
                 break;
         }
 
-        // 클라이언트에게 상태 변경 알림 (/phase [phase] [time])
         room.broadcastMessage(Protocol.CMD_PHASE + " " + nextPhase + " " + duration);
 
-        // 타이머 스케줄링
         gameTimer = new Timer();
         gameTimer.schedule(new TimerTask() {
             @Override
             public void run() {
-                nextPhase();    // 시간 종료 시 다음 단계로 이동
+                nextPhase();
             }
         }, duration * 1000L);
     }
 
-    // 다음 단계로 이동하는 로직 (순환 구조)
+    // 다음 단계로 이동하는 로직
     private void nextPhase() {
-        // 이미 게임이 끝난 상태면 아무것도 하지 않음
         if (currentPhase == GamePhase.ENDED) {
             return;
         }
@@ -133,7 +127,6 @@ public class GameEngine {
                 break;
             case DAY_VOTE:
                 processVotingResult();
-                // 게임이 안 끝났으면 밤으로
                 break;
             case HUNTER_REVENGE:
                 room.broadcastMessage("[System] 사냥꾼이 망설이다가 숨을 거두었습니다...");
@@ -141,112 +134,50 @@ public class GameEngine {
                 break;
             case NIGHT_ACTION:
                 processNight();
-                // 게임이 안 끝났으면 낮으로
-                if (currentPhase != GamePhase.ENDED) {
-                    startPhase(GamePhase.DAY_DISCUSSION);
-                }
                 break;
-        }
-    }
-
-    public void resumeAfterHunter() {
-        if (currentPhase == GamePhase.HUNTER_REVENGE) {
-            System.out.println("[GameEngine] 사냥꾼 발포 완료. 밤으로 전환합니다.");
-            startPhase(GamePhase.NIGHT_ACTION);
-        }
-    }
-
-    // 독재자 쿠데타 발동 로직
-    public synchronized void triggerDictatorCoup(String dictatorName, String targetName) {
-        // 1. 돌아가던 투표 타이머 취소 (핵심!)
-        if (gameTimer != null) {
-            gameTimer.cancel();
-            gameTimer = null;
-        }
-
-        // 2. 전체 알림
-        room.broadcastMessage("=============================================");
-        room.broadcastMessage("[속보] 독재자 '" + dictatorName + "' 님이 쿠데타를 선포했습니다!");
-        room.broadcastMessage("[속보] 투표가 즉시 중단되며, 독재자의 권한으로 '" + targetName + "' 님을 즉결 처형합니다.");
-        room.broadcastMessage("=============================================");
-
-        // 3. 처형 집행 (원인: DICTATOR)
-        boolean gameEnded = room.killUser(targetName, "DICTATOR");
-
-        // 4. 게임이 안 끝났으면 잠시 후 밤으로 강제 이동
-        if (!gameEnded) {
-            // 연출을 위해 3초 정도 딜레이 후 밤으로
-            new java.util.Timer().schedule(new java.util.TimerTask() {
-                @Override
-                public void run() {
-                    startPhase(GamePhase.NIGHT_ACTION);
-                }
-            }, 3000L);
         }
     }
 
     // 낮 투표 결과 처리
     private void processVotingResult() {
-        room.broadcastMessage("[System] 투표 시간이 종료되었습니다.");
+        room.broadcastMessage("[System] 투표 시간이 종료되었습니다. 개표를 진행합니다...");
+
         int result = room.processDayVoting();
 
         if (result == 1) {
-            stopEngine(); // 게임 종료
+            stopEngine();
         } else if (result == 2) {
-            // ★ 사냥꾼 발동 -> 사냥꾼 페이즈 시작
             startPhase(GamePhase.HUNTER_REVENGE);
         } else {
-            // 아무 일 없음 or 일반 시민 사망 -> 밤으로 이동
             startPhase(GamePhase.NIGHT_ACTION);
         }
     }
 
-    // 밤 결과 처리 (늑대, 경비병, 선견자)
+    // 밤 결과 처리
     public void processNight() {
-//        if (!room.isNight()) return;
-//
-//        room.setIsNight(false);
-//        Map<String, String> nightActions = room.getNightActions();
-//
-//        // ... (밤 로직)
-//
-//        nightActions.clear();
-//        room.broadcastMessage("[System] 이제 낮이 시작됩니다. 투표를 준비하세요.");
-        Map<String, String> actions = room.getNightActions(); // { "늑대인간": "UserA", "경비병": "UserA", ... }
-
+        Map<String, String> actions = room.getNightActions();
         String wolfTarget = actions.get("늑대인간");
         String guardTarget = actions.get("경비병");
         String seerTarget = actions.get("선견자");
 
         List<String> deathList = new ArrayList<>();
+        List<String> nightMessages = new ArrayList<>(); // 메시지 버퍼
 
-        // 1. 늑대 살해 로직
+        // 1. 늑대/경비병 결과 계산
         if (wolfTarget != null) {
             if (wolfTarget.equals(guardTarget)) {
-                room.broadcastMessage("[System] 간밤에 경비병이 누군가를 지켜냈습니다!");    // 경비병이 막음
+                nightMessages.add("[System] 간밤에 경비병이 누군가를 지켜냈습니다!");
             } else {
-                deathList.add(wolfTarget); // 살해 성공
+                deathList.add(wolfTarget);
             }
         } else {
-            room.broadcastMessage("[System] 간밤에 아무 일도 일어나지 않았습니다.");
+            nightMessages.add("[System] 간밤에 아무 일도 일어나지 않았습니다.");
         }
 
-        // 2. 사망자 처리 및 승리 조건 확인
-        boolean isGameEnded = false;
-
-        for (String deadUser : deathList) {
-            room.broadcastMessage("[System] 비극적이게도 '" + deadUser + "' 님이 처참하게 살해당했습니다.");
-            if (room.killUser(deadUser)) {
-                isGameEnded = true; // 게임 끝
-            }
-        }
-
-        // 3. 선견자 로직 (개별 전송)
+        // 2. 선견자 로직 (개별 전송)
         if (seerTarget != null) {
-            // 선견자 역할을 가진 ClientHandler 찾기
             for (ClientHandler client : room.getClientsInRoom()) {
                 if (client.getRoleName().equals("선견자")) {
-                    // 타겟의 직업 확인
                     ClientHandler targetClient = findClientByNickname(seerTarget);
                     if (targetClient != null) {
                         String result = targetClient.getRole().getFaction().equals("Mafia") ? "늑대(Mafia)" : "시민(Citizen)";
@@ -257,26 +188,81 @@ public class GameEngine {
             }
         }
 
-        // 행동 기록 초기화
+        // 3. 낮 시작 알림을 먼저 보냄 
+        startPhase(GamePhase.DAY_DISCUSSION);
+
+        // 4. 저장해둔 밤 결과 메시지 출력
+        for (String msg : nightMessages) {
+            room.broadcastMessage(msg);
+        }
+
+        // 5. 사망자 처리
+        boolean isGameEnded = false;
+        boolean hunterDied = false;
+
+        for (String deadUser : deathList) {
+            room.broadcastMessage("[System] 비극적이게도 '" + deadUser + "' 님이 처참하게 살해당했습니다.");
+
+            // 사냥꾼인지 확인
+            ClientHandler victim = findClientByNickname(deadUser);
+            if (victim != null && "사냥꾼".equals(victim.getRoleName())) {
+                hunterDied = true;
+            }
+
+            if (room.killUser(deadUser, "NIGHT")) {
+                isGameEnded = true;
+            }
+        }
+
         room.getNightActions().clear();
 
-        // 밤에 누군가 죽어서 게임이 끝났다면 엔진 정지
         if (isGameEnded) {
             stopEngine();
+        } else if (hunterDied) {
+            // 밤에 사냥꾼이 죽으면 즉시 복수 페이즈로 전환 (낮 타이머 취소됨)
+            startPhase(GamePhase.HUNTER_REVENGE);
         }
     }
 
-    // 엔진 정지 메소드
-    protected void stopEngine() {
+    public void triggerDictatorCoup(String dictatorName, String targetName) {
         if (gameTimer != null) {
-            gameTimer.cancel(); // 타이머 취소
+            gameTimer.cancel();
             gameTimer = null;
         }
-        this.currentPhase = GamePhase.ENDED; // 상태를 '종료'로 변경
+
+        room.broadcastMessage("=============================================");
+        room.broadcastMessage("[속보] 독재자 '" + dictatorName + "' 님이 쿠데타를 선포했습니다!");
+        room.broadcastMessage("[속보] 투표가 즉시 중단되며, 독재자의 권한으로 '" + targetName + "' 님을 즉결 처형합니다.");
+        room.broadcastMessage("=============================================");
+
+        boolean gameEnded = room.killUser(targetName, "DICTATOR");
+
+        if (!gameEnded) {
+            new java.util.Timer().schedule(new java.util.TimerTask() {
+                @Override
+                public void run() {
+                    startPhase(GamePhase.NIGHT_ACTION);
+                }
+            }, 3000L);
+        }
+    }
+
+    public void resumeAfterHunter() {
+        if (currentPhase == GamePhase.HUNTER_REVENGE) {
+            System.out.println("[GameEngine] 사냥꾼 발포 완료. 밤으로 전환합니다.");
+            startPhase(GamePhase.NIGHT_ACTION);
+        }
+    }
+
+    public void stopEngine() {
+        if (gameTimer != null) {
+            gameTimer.cancel();
+            gameTimer = null;
+        }
+        this.currentPhase = GamePhase.ENDED;
         System.out.println("[GameEngine] 게임이 종료되어 엔진을 정지합니다.");
     }
 
-    // 닉네임으로 클라이언트 찾기 헬퍼
     private ClientHandler findClientByNickname(String nickname) {
         for (ClientHandler c : room.getClientsInRoom()) {
             if (c.getNickname().equals(nickname)) {
@@ -286,34 +272,26 @@ public class GameEngine {
         return null;
     }
 
-    /**
-     * 역할 이름에 따라 해당 Role 클래스의 인스턴스를 생성하는 헬퍼 메소드
-     */
     private Role createRoleInstance(String roleName) {
         switch (roleName) {
             case "늑대인간":
-                return new WolfRole(); // 내부에서 "늑대인간" 반환
+                return new WolfRole();
             case "경비병":
-                return new GuardRole(); // 내부에서 "경비병" 반환
+                return new GuardRole();
             case "선견자":
-                return new SeerRole(); // 내부에서 "선견자" 반환
-
-            // 특수 직업들을 한글 이름으로 생성
-            case "독재자":
-                return new DictatorRole();
-            case "마녀":
-                return new CitizenRole("마녀");
+                return new SeerRole();
+            case "큐피드":
+                return new CupidRole();
             case "사냥꾼":
                 return new HunterRole();
             case "천사":
                 return new AngelRole();
-            case "큐피드":
-                return new CupidRole();
-            case "시민":
-                return new CitizenRole(); // 기본값 "시민"
+            case "독재자":
+                return new DictatorRole();
+            case "마녀":
+                return new CitizenRole("마녀");
             default:
-                // 혹시 모를 예외 처리를 위해 기본 시민으로 반환하거나 null
-                return new CitizenRole("시민");
+                return new CitizenRole();
         }
     }
 }
