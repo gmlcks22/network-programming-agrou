@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.net.Socket;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
+import com.formdev.flatlaf.FlatDarkLaf;
 
 public class MainFrame extends JFrame {
 
@@ -222,6 +223,17 @@ public class MainFrame extends JFrame {
         });
     }
     public static void main(String[] args) {
+        // FlatLaf 적용
+        try {
+            UIManager.put("Component.focusColor", new Color(180, 0, 0)); // 포커스 테두리
+            UIManager.put("Component.accentColor", new Color(200, 40, 40)); // 주요 강조 색
+            UIManager.put("Button.default.background", new Color(180, 0, 0)); // 기본 버튼 배경
+            UIManager.put("Button.default.focusedBackground", new Color(200, 50, 50));
+            FlatDarkLaf.setup();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
         SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {

@@ -19,7 +19,7 @@ public class RoomListPanel extends JPanel {
     public RoomListPanel(MainFrame mainFrame) {
         this.mainFrame = mainFrame;
         setLayout(new BorderLayout());
-        setBackground(Color.white);
+        //setBackground(Color.white);
 
         // 상단 타이틀
         JLabel titleLabel = new JLabel("참여할 방을 선택하세요");
@@ -49,7 +49,7 @@ public class RoomListPanel extends JPanel {
 
         // 하단: 버튼들
         JPanel bottomPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 20, 10));
-        bottomPanel.setBackground(Color.white);
+        //bottomPanel.setBackground(Color.white);
 
         JButton refreshButton = new JButton("새로고침");
         JButton joinButton = new JButton("입장하기");
@@ -60,7 +60,7 @@ public class RoomListPanel extends JPanel {
         refreshButton.setPreferredSize(btnSize);
         joinButton.setPreferredSize(btnSize);
         backButton.setPreferredSize(btnSize);
-        joinButton.setBackground(new Color(200, 230, 255));
+        //joinButton.setBackground(new Color(200, 230, 255));
 
         bottomPanel.add(refreshButton);
         bottomPanel.add(joinButton);

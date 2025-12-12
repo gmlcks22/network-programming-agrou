@@ -24,7 +24,7 @@ public class WaitingPanel extends JPanel {
     public WaitingPanel(MainFrame mainFrame) {
         this.mainFrame = mainFrame;
         setLayout(new BorderLayout());
-        setBackground(new Color(240, 240, 255));
+        //setBackground(new Color(240, 240, 255));
 
         // 1. 상단: 방 제목 표시
         JLabel titleLabel = new JLabel("게임 대기실 (공개방)");
