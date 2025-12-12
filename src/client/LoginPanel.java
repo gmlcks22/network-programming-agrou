@@ -32,7 +32,7 @@ public class LoginPanel extends JPanel {
 
         // 타이틀 (North)
         JLabel titleLabel = new JLabel("Mafia Game");
-        titleLabel.setFont(new Font("SansSerif", Font.BOLD, 40));
+        titleLabel.setFont(UIManager.getFont("defaultFont").deriveFont(Font.BOLD, (float)40));
         titleLabel.setHorizontalAlignment(SwingConstants.CENTER);
         add(titleLabel, BorderLayout.NORTH);
 
@@ -76,13 +76,13 @@ public class LoginPanel extends JPanel {
         loginButton.setMaximumSize(fieldSize);
         
         // 폰트 및 정렬 설정
-        Font fieldFont = new Font("SansSerif", Font.PLAIN, 14);
+        Font fieldFont = UIManager.getFont("defaultFont").deriveFont(Font.PLAIN, (float)14);
         ipField.setFont(fieldFont);
         portField.setFont(fieldFont);
         nicknameField.setFont(fieldFont);
         
         //loginButton.setBackground(new Color(220, 220, 220)); // 이미지와 유사한 회색
-        loginButton.setFont(new Font("SansSerif", Font.BOLD, 14));
+        loginButton.setFont(UIManager.getFont("defaultFont").deriveFont(Font.BOLD, (float)14));
 
         // 폼 패널에 컴포넌트 추가
         formPanel.add(ipField);

@@ -92,7 +92,7 @@ public class GamePanel extends JPanel {
         myRoleImageLabel.setPreferredSize(new Dimension(50, 50));
         myRoleImageLabel.setBorder(BorderFactory.createLineBorder(Color.GRAY));
         myRoleNameLabel = new JLabel("직업: " + myRoleName);
-        myRoleNameLabel.setFont(new Font("맑은 고딕", Font.BOLD, 16));
+        myRoleNameLabel.setFont(UIManager.getFont("defaultFont").deriveFont(Font.BOLD, (float)16));
         myRoleNameLabel.setBorder(BorderFactory.createEmptyBorder(0, 10, 0, 0));
         myRolePanel.add(myRoleImageLabel);
         myRolePanel.add(myRoleNameLabel);
@@ -102,10 +102,10 @@ public class GamePanel extends JPanel {
         JPanel statusPanel = new JPanel(new GridLayout(2, 1));
         statusPanel.setOpaque(false);
         phaseLabel = new JLabel("게임 대기 중");
-        phaseLabel.setFont(new Font("맑은 고딕", Font.BOLD, 18));
+        phaseLabel.setFont(UIManager.getFont("defaultFont").deriveFont(Font.BOLD, (float)18));
         phaseLabel.setHorizontalAlignment(SwingConstants.CENTER);
         timerLabel = new JLabel("-");
-        timerLabel.setFont(new Font("맑은 고딕", Font.BOLD, 22));
+        timerLabel.setFont(UIManager.getFont("defaultFont").deriveFont(Font.BOLD, (float)22));
         timerLabel.setForeground(new Color(200, 50, 50));
         timerLabel.setHorizontalAlignment(SwingConstants.CENTER);
         statusPanel.add(phaseLabel);
@@ -114,7 +114,7 @@ public class GamePanel extends JPanel {
 
         // 3. 우측 (EAST)
         survivorCountLabel = new JLabel("생존자: " + survivorCount + "명");
-        survivorCountLabel.setFont(new Font("맑은 고딕", Font.BOLD, 20));
+        survivorCountLabel.setFont(UIManager.getFont("defaultFont").deriveFont(Font.BOLD, (float)20));
         JPanel rightInfoPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
         rightInfoPanel.setOpaque(false);
         rightInfoPanel.add(survivorCountLabel);
@@ -138,7 +138,7 @@ public class GamePanel extends JPanel {
 //        descriptionPanel.setBackground(new Color(255, 255, 240));
         descriptionPanel.setBorder(BorderFactory.createTitledBorder("직업 설명"));
         roleDescriptionLabel = new JLabel("직업 이미지를 클릭하면 설명이 여기에 표시됩니다.");
-        roleDescriptionLabel.setFont(new Font("맑은 고딕", Font.PLAIN, 16));
+        roleDescriptionLabel.setFont(UIManager.getFont("defaultFont").deriveFont(Font.PLAIN, (float)16));
         roleDescriptionLabel.setHorizontalAlignment(SwingConstants.CENTER);
         descriptionPanel.add(roleDescriptionLabel, BorderLayout.CENTER);
         
@@ -259,7 +259,7 @@ public class GamePanel extends JPanel {
                 if (nickname.isEmpty()) continue;
 
                 JButton playerBtn = new JButton(nickname);
-                playerBtn.setFont(new Font("맑은 고딕", Font.BOLD, 16));
+                playerBtn.setFont(UIManager.getFont("defaultFont").deriveFont(Font.BOLD, (float)16));
                 
                 // 사망 여부에 따른 스타일 분기
                 if (deadPlayers.contains(nickname)) {

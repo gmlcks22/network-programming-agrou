@@ -23,7 +23,7 @@ public class RoomListPanel extends JPanel {
 
         // 상단 타이틀
         JLabel titleLabel = new JLabel("참여할 방을 선택하세요");
-        titleLabel.setFont(new Font("맑은 고딕", Font.BOLD, 24));
+        titleLabel.setFont(UIManager.getFont("defaultFont").deriveFont(Font.BOLD, (float)24));
         titleLabel.setHorizontalAlignment(SwingConstants.CENTER);
         titleLabel.setBorder(BorderFactory.createEmptyBorder(20, 0, 20, 0));
         add(titleLabel, BorderLayout.NORTH);
@@ -32,7 +32,7 @@ public class RoomListPanel extends JPanel {
         roomListModel = new DefaultListModel<>();
         roomList = new JList<>(roomListModel);
         roomList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        roomList.setFont(new Font("맑은 고딕", Font.PLAIN, 16));
+        roomList.setFont(UIManager.getFont("defaultFont").deriveFont(Font.PLAIN, (float)16));
 
         // 더블 클릭 시 바로 입장
         roomList.addMouseListener(new MouseAdapter() {

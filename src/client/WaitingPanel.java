@@ -28,7 +28,7 @@ public class WaitingPanel extends JPanel {
 
         // 1. 상단: 방 제목 표시
         JLabel titleLabel = new JLabel("게임 대기실 (공개방)");
-        titleLabel.setFont(new Font("맑은 고딕", Font.BOLD, 24));
+        titleLabel.setFont(UIManager.getFont("defaultFont").deriveFont(Font.BOLD, (float)24));
         titleLabel.setHorizontalAlignment(SwingConstants.CENTER);
         titleLabel.setBorder(BorderFactory.createEmptyBorder(20, 0, 20, 0));
         add(titleLabel, BorderLayout.NORTH);
@@ -39,14 +39,14 @@ public class WaitingPanel extends JPanel {
         // 왼쪽: 채팅창
         chatArea = new JTextArea();
         chatArea.setEditable(false);
-        chatArea.setFont(new Font("맑은 고딕", Font.PLAIN, 14));
+        chatArea.setFont(UIManager.getFont("defaultFont").deriveFont(Font.PLAIN, (float)14));
         JScrollPane scrollPane = new JScrollPane(chatArea);
         centerPanel.add(scrollPane, BorderLayout.CENTER);
 
         // 오른쪽: 유저 목록 (JList)
         userListModel = new DefaultListModel<>(); // 모델 초기화
         userList = new JList<>(userListModel);
-        userList.setFont(new Font("맑은 고딕", Font.BOLD, 14));
+        userList.setFont(UIManager.getFont("defaultFont").deriveFont(Font.BOLD, (float)14));
         JScrollPane userScrollPane = new JScrollPane(userList);
         userScrollPane.setPreferredSize(new Dimension(150, 400)); // 너비 고정
         centerPanel.add(userScrollPane, BorderLayout.EAST); // 우측에 유저 리스트 배치
@@ -57,7 +57,7 @@ public class WaitingPanel extends JPanel {
         JPanel bottomPanel = new JPanel(new BorderLayout(5, 5)); // 내부 간격 5px
         
         chatField = new JTextField();
-        chatField.setFont(new Font("맑은 고딕", Font.PLAIN, 14));
+        chatField.setFont(UIManager.getFont("defaultFont").deriveFont(Font.PLAIN, (float)14));
         
         // ★ '게임 시작' 버튼 생성
         startGameButton = new JButton("게임 시작");
