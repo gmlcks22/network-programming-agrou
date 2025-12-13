@@ -22,9 +22,8 @@ public class GamePanel extends JPanel {
     // --- 상단 (Top) UI ---
     private JPanel roleBookPanel;   // 직업 도감 (상단 이동)
     private JLabel phaseLabel;
-    private JLabel timerLabel;
+    private JProgressBar timerProgressBar;
     private JLabel survivorCountLabel;
-    private JLabel myRoleNameLabel; // 내 직업 텍스트 (상단 도감 옆이나 별도 표시는 공간상 생략 또는 도감 강조로 대체 가능, 여기선 도감 강조로 대체)
 
     // --- 중앙 (Center) UI ---
     private JPanel centerInfoPanel; // 안내 문구 표시
@@ -46,6 +45,7 @@ public class GamePanel extends JPanel {
     private String currentPhase = "WAITING";
     private Timer clientTimer;
     private int remainingSeconds = 0;
+    private int maxSeconds = 1; // Progress bar 계산용 전체 시간
 
     // 플레이어 버튼 관리 (닉네임 -> 버튼)
     private Map<String, JButton> playerButtons = new HashMap<>();
@@ -83,7 +83,6 @@ public class GamePanel extends JPanel {
 
         initTopPanel();
         initCenterPanel();
-        // initRightPanel(); // 우측 패널(기존 대상선택) 제거
         initBottomPanel();
     }
 
@@ -91,7 +90,7 @@ public class GamePanel extends JPanel {
     private void initTopPanel() {
         JPanel topPanel = new JPanel(new BorderLayout());
         topPanel.setBorder(BorderFactory.createEmptyBorder(5, 10, 5, 10));
-        topPanel.setPreferredSize(new Dimension(0, 120)); // 높이 확보
+        topPanel.setPreferredSize(new Dimension(0, 85));
 
         // [좌측] 직업 도감
         roleBookPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 5, 0));
@@ -111,16 +110,23 @@ public class GamePanel extends JPanel {
         statusPanel.setOpaque(false);
 
         phaseLabel = new JLabel("게임 대기 중");
-        phaseLabel.setFont(UIManager.getFont("defaultFont").deriveFont(Font.BOLD, (float) 18));
+        phaseLabel.setFont(UIManager.getFont("defaultFont").deriveFont(Font.BOLD, (float) 16));
         phaseLabel.setHorizontalAlignment(SwingConstants.CENTER);
 
-        timerLabel = new JLabel("-");
-        timerLabel.setFont(UIManager.getFont("defaultFont").deriveFont(Font.BOLD, (float) 24));
-        timerLabel.setForeground(new Color(200, 50, 50));
-        timerLabel.setHorizontalAlignment(SwingConstants.CENTER);
+        timerProgressBar = new JProgressBar();
+        timerProgressBar.setValue(0);
+        timerProgressBar.setStringPainted(true); // 바 안에 N초 텍스트 표시
+        timerProgressBar.setFont(UIManager.getFont("defaultFont").deriveFont(Font.BOLD, 12f));
+        timerProgressBar.setForeground(new Color(100, 200, 100)); // 초기 초록색
+        timerProgressBar.setBackground(Color.WHITE);
+        timerProgressBar.setUI(new javax.swing.plaf.basic.BasicProgressBarUI() {
+            protected Color getSelectionBackground() { return Color.WHITE; } // 바가 없는 곳의 글자 색
+            protected Color getSelectionForeground() { return Color.WHITE; } // 바가 채워진 곳의 글자 색
+        });
+        timerProgressBar.setPreferredSize(new Dimension(200, 8)); // 바 크기 설정(statusPanel이라 자동으로 높이 지정됨)
 
-        statusPanel.add(phaseLabel);
-        statusPanel.add(timerLabel);
+        statusPanel.add(phaseLabel, BorderLayout.NORTH);
+        statusPanel.add(timerProgressBar, BorderLayout.CENTER);
         topPanel.add(statusPanel, BorderLayout.CENTER);
 
         // [우측] 생존자 수
@@ -471,6 +477,15 @@ public class GamePanel extends JPanel {
     public void updatePhase(String phase, int duration) {
         this.currentPhase = phase;
         this.remainingSeconds = duration;
+        this.maxSeconds = duration;
+
+        // Progress Bar 초기화
+        if (timerProgressBar != null) {
+            timerProgressBar.setMaximum(duration);
+            timerProgressBar.setValue(duration);
+            timerProgressBar.setString(duration + "초");
+            timerProgressBar.setForeground(new Color(100, 200, 100));
+        }
         boolean canChat = true;
 
         if (phase.equals("DAY_DISCUSSION")) {
@@ -510,11 +525,29 @@ public class GamePanel extends JPanel {
         setChatEnabled(canChat);
 
         if (clientTimer != null) clientTimer.stop();
-        timerLabel.setText(remainingSeconds + "초");
+
+        // 타이머 로직 수정 (프로그레스 바 연동)
         clientTimer = new Timer(1000, e -> {
             remainingSeconds--;
-            if (remainingSeconds >= 0) timerLabel.setText(remainingSeconds + "초");
-            else ((Timer)e.getSource()).stop();
+            if (remainingSeconds >= 0) {
+                // [수정] 라벨 대신 프로그레스 바 업데이트
+                if (timerProgressBar != null) {
+                    timerProgressBar.setValue(remainingSeconds);
+                    timerProgressBar.setString(remainingSeconds + "초");
+
+                    // 색상 변화 (여유: 초록 -> 60%미만: 노랑 -> 30%미만: 빨강)
+                    float ratio = (float) remainingSeconds / maxSeconds;
+                    if (ratio < 0.3) {
+                        timerProgressBar.setForeground(new Color(220, 50, 50)); // 빨강
+                    } else if (ratio < 0.6) {
+                        timerProgressBar.setForeground(new Color(220, 180, 50)); // 노랑
+                    } else {
+                        timerProgressBar.setForeground(new Color(100, 200, 100)); // 초록
+                    }
+                }
+            } else {
+                ((Timer)e.getSource()).stop();
+            }
         });
         clientTimer.start();
     }
@@ -605,9 +638,14 @@ public class GamePanel extends JPanel {
         chatArea.setText("");
         chatField.setText("");
         if (phaseLabel != null) phaseLabel.setText("게임 대기 중");
-        if (timerLabel != null) timerLabel.setText("-");
+        //if (timerLabel != null) timerLabel.setText("-");
         if (survivorCountLabel != null) survivorCountLabel.setText("생존자: 0명");
 
+        if (timerProgressBar != null) {
+            timerProgressBar.setValue(0);
+            timerProgressBar.setString("-");
+            timerProgressBar.setForeground(new Color(100, 200, 100));
+        }
         if (chatModeCombo != null) {
             chatModeCombo.removeAllItems();
             chatModeCombo.addItem("전체");
