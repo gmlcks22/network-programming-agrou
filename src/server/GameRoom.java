@@ -152,6 +152,11 @@ public class GameRoom {
             requester.sendMessage("[System] 게임 시작은 방장만 할 수 있습니다.");
             return;
         }
+        // 현재 인원과 직업 설정(maxPopulation)이 일치하는지 먼저 검사
+        if (clientsInRoom.size() != maxPopulation) {
+            requester.sendMessage("[System] 시작 실패: 설정된 직업 수(" + maxPopulation + "명)와 현재 참가자 수(" + clientsInRoom.size() + "명)가 일치하지 않습니다.");
+            return;
+        }
         // 최소 인원 체크 (4명)
         if (clientsInRoom.size() < 4) {
             requester.sendMessage("[System] 게임을 시작하려면 최소 4명이 필요합니다.");
