@@ -94,7 +94,7 @@ public class GameEngine {
             case HUNTER_REVENGE:
                 duration = TIME_HUNTER;
                 room.setIsNight(false);
-                room.broadcastMessage("[System] ☠️ 사냥꾼이 사망했습니다! 15초 내에 저승 길동무를 선택합니다.");
+                room.broadcastMessage("[System] ☠사냥꾼이 사망했습니다! 15초 내에 저승 길동무를 선택합니다.");
                 break;
 
             case NIGHT_ACTION:

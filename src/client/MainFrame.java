@@ -154,11 +154,9 @@ public class MainFrame extends JFrame {
                 String listStr = message.substring(Protocol.CMD_ROOMLIST.length() + 1).trim();
                 String[] rooms = listStr.split(","); // 쉼표로 방 구분 /roomlist 방1, 방2, 방3, ...
                 roomListPanel.updateRoomList(rooms);    // 패널 갱신 호출
-            } // === 로비 관련 처리 ===
-            // 서버가 "/roomlist 방1, 방2, ..." 형식으로 보낸다고 가정
-            else if (message.startsWith(Protocol.CMD_ROOMLIST)) {
-                // todo lobbyPanel.updateRoomList() 호출 구현 필요
-            } // 직업 배정 알림 처리
+            }
+            // === 로비 관련 처리 ===
+            // 직업 배정 알림 처리
             else if (message.startsWith(Protocol.CMD_ROLE_ASSIGN)) {
                 String[] parts = message.substring(Protocol.CMD_ROLE_ASSIGN.length() + 1).split(" ");
                 String roleName = parts[0];
@@ -245,11 +243,31 @@ public class MainFrame extends JFrame {
             // 채팅 및 시스템 메시지 처리 (나머지는 EnterGamePanel의 채팅창으로 보냄)
             else {
                 waitingPanel.appendMessage(message);
+                // 인게임 처리
                 if (gamePanel != null) {
-                    gamePanel.appendMessage(message);
+                    // 시스템 메시지인지 판단하는 조건문
+                    if (isSystemMessage(message)) {
+                        // 중앙 패널에 크게 표시
+                        gamePanel.showSystemMessage(message);
+                        gamePanel.appendMessage(message);
+                    } else {
+                        // 일반 유저 채팅은 채팅창에만 표시
+                        gamePanel.appendMessage(message);
+                    }
                 }
             }
         });
+    }
+
+    // 시스템 메시지 판별 헬퍼 메소드
+    private boolean isSystemMessage(String msg) {
+        return msg.startsWith("[System]") ||
+                msg.startsWith("[Server]") ||
+                msg.startsWith("[투표]") ||
+                msg.startsWith("[낮]") ||
+                msg.startsWith("[밤]") ||
+                msg.startsWith("[선견자 능력]") ||
+                msg.startsWith("---");
     }
 
     public static void main(String[] args) {

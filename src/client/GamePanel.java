@@ -27,6 +27,7 @@ public class GamePanel extends JPanel {
 
     // --- 중앙 (Center) UI ---
     private JPanel centerInfoPanel; // 안내 문구 표시
+    private JLabel centerInfoLabel; // 중앙 안내 문구 전환용
 
     // --- 하단 (Bottom) UI ---
     private JTextArea chatArea;
@@ -171,20 +172,35 @@ public class GamePanel extends JPanel {
         add(topPanel, BorderLayout.NORTH);
     }
 
-    // 2. 중앙 패널: 단순 정보 표시 (카드 레이아웃 제거)
+    // 2. 중앙 패널: 단순 정보 표시
     private void initCenterPanel() {
         centerInfoPanel = new JPanel(new BorderLayout());
         centerInfoPanel.setOpaque(false);
         centerInfoPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
 
-        JLabel infoLabel = new JLabel("<html><div style='text-align: center; color: gray;'>" +
+        centerInfoLabel = new ShadowLabel("<html><div style='text-align: center; color: gray;'>" +
                 "<h1>Wolf Mafia</h1>" +
-                "<p>상단 왼쪽의 도감을 클릭하여 직업 설명을 확인하세요.<br>" +
-                "하단에서 대상을 선택하여 투표하거나 능력을 사용하세요.</p></div></html>");
-        infoLabel.setHorizontalAlignment(SwingConstants.CENTER);
+                "<p>게임이 시작되면 이곳에<br>주요 알림이 표시됩니다.</p></div></html>");
+        centerInfoLabel.setHorizontalAlignment(SwingConstants.CENTER);
+        centerInfoPanel.setFont(UIManager.getFont("defaultFont").deriveFont(Font.BOLD, (float) 16));
+        centerInfoPanel.setForeground(Color.white);
 
-        centerInfoPanel.add(infoLabel, BorderLayout.CENTER);
+        centerInfoPanel.add(centerInfoLabel, BorderLayout.CENTER);
         add(centerInfoPanel, BorderLayout.CENTER);
+    }
+
+    // 시스템 메시지를 중앙에 표시
+    public void showSystemMessage(String message) {
+        String colorStyle = "grey";
+        if (message.startsWith("[낮]")) colorStyle = "#FFD700";  // 낮 - 노란색
+        else if (message.startsWith("[밤]")) colorStyle = "#AAAAFF"; // 밤 - 연한 파랑
+        else if (message.contains("당신의 지목은")) colorStyle = "#FF5555";   // 마피아 지목 - 붉은색
+        else if (message.contains("사망")) colorStyle = "#FF5555";    // 사망 - 붉은색
+
+        String htmlMsg = "<html><div style='text-align: center; '>" +
+                "<h2>" + message + "</h2></div></html>";
+
+        centerInfoLabel.setText(htmlMsg);
     }
 
     // 3. 하단 패널: 채팅(좌) + 플레이어 선택(중)
@@ -572,13 +588,13 @@ public class GamePanel extends JPanel {
 
         if (phase.equals("DAY_DISCUSSION")) {
             phaseLabel.setText("☀ 낮 (토론)");
-            phaseLabel.setForeground(new Color(0, 100, 200));
+            phaseLabel.setForeground(new Color(0, 0, 100));
             setTargetSelectionEnabled(false);
             appendMessage("[System] 토론 시간입니다.");
             if (chatModeCombo.isVisible()) chatModeCombo.setSelectedItem("전체");
         } else if (phase.equals("DAY_VOTE")) {
             phaseLabel.setText("🗳 낮 (투표)");
-            phaseLabel.setForeground(new Color(200, 50, 0));
+            phaseLabel.setForeground(new Color(255, 255, 255));
             setTargetSelectionEnabled(true);
             appendMessage("[System] 투표 시간입니다.");
         } else if (phase.equals("HUNTER_REVENGE")) {
@@ -588,7 +604,7 @@ public class GamePanel extends JPanel {
             appendMessage("[System] 사냥꾼이 총을 겨누고 있습니다!");
         } else if (phase.equals("NIGHT_ACTION")) {
             phaseLabel.setText("🌙 밤 (능력 사용)");
-            phaseLabel.setForeground(new Color(0, 0, 100));
+            phaseLabel.setForeground(new Color(255, 215, 0));
             canChat = "Mafia".equals(myFaction);
             if(canChat) {
                 chatModeCombo.setSelectedItem("마피아");
@@ -736,6 +752,35 @@ public class GamePanel extends JPanel {
             g2.setColor(backgroundColor);
             g2.fillRect(0, 0, getWidth(), getHeight()); // 반투명 사각형 그림
             g2.dispose();
+            super.paintComponent(g);
+        }
+    }
+
+    // 텍스트에 그림자 효과를 주는 커스텀 라벨
+    private class ShadowLabel extends JLabel {
+        public ShadowLabel(String text) {
+            super(text);
+        }
+
+        public ShadowLabel(String text, int horizontalAlignment) {
+            super(text, horizontalAlignment);
+        }
+
+        @Override
+        public void paintComponent(Graphics g) {
+            Color originalColor = getForeground();
+
+            // 1. 그림자 그리기 (검정색 반투명, 2px 오프셋)
+            Graphics2D g2 = (Graphics2D) g.create();
+            g2.translate(2, 2); // 오른쪽 아래로 2px 이동
+
+            // 그림자 색상 설정 (진한 검정, 투명도 200)
+            setForeground(new Color(0, 0, 0, 200));
+            super.paintComponent(g2);
+            g2.dispose();
+
+            // 2. 원래 텍스트 그리기 (원래 색상 복구)
+            setForeground(originalColor);
             super.paintComponent(g);
         }
     }
