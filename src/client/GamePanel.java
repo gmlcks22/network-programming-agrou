@@ -104,13 +104,24 @@ public class GamePanel extends JPanel {
         backgroundImage = phaseBackgrounds.get("DAY_DISCUSSION");
     }
 
-    // ★ 배경 그리기 메소드
+    // 배경 그리기 메소드
     @Override
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
         if (backgroundImage != null) {
             // 화면 크기에 맞춰 꽉 차게
             g.drawImage(backgroundImage, 0, 0, getWidth(), getHeight(), this);
+        }
+
+        // [추가] 만약 죽은 상태라면, 화면 전체를 어둡게 덮어씌움
+        if (amIDead) {
+            Graphics2D g2d = (Graphics2D) g;
+
+            // 반투명하고 어둡게 채움
+            g2d.setColor(new Color(0, 0, 0, 150));
+
+            // 패널 크기만큼 사각형 채우기
+            g2d.fillRect(0, 0, getWidth(), getHeight());
         }
     }
 
@@ -332,6 +343,8 @@ public class GamePanel extends JPanel {
             chatModeCombo.setSelectedItem("유령");
             chatModeCombo.setVisible(true);
             chatModeCombo.setEnabled(false);
+
+            repaint();
         }
 
         refreshPlayerGrid();
