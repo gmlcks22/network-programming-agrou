@@ -17,9 +17,17 @@ public class LobbyPanel extends JPanel {
     // 2. GUI 컴포넌트 선언
     private JButton createRoomButton;
     private JButton findRoomButton;
-    private JButton settingsButton;
+
+    private Image backgroundImage;
 
     public LobbyPanel(MainFrame mainFrame) {
+        // 배경 이미지 로드
+        try {
+            ImageIcon icon = new ImageIcon(getClass().getResource("/resources/images/backgrounds/bg_lobby.jpg"));
+            backgroundImage = icon.getImage();
+        } catch (Exception e) {
+            System.err.println("배경 이미지를 찾을 수 없습니다.");
+        }
 
         this.mainPanel = mainFrame;
 
@@ -31,16 +39,18 @@ public class LobbyPanel extends JPanel {
         JLabel titleLabel = new JLabel("Mafia Game");
         titleLabel.setFont(UIManager.getFont("defaultFont").deriveFont(Font.BOLD, (float)40));
         titleLabel.setHorizontalAlignment(SwingConstants.CENTER);
+        titleLabel.setForeground(Color.white);
+
         this.add(titleLabel, BorderLayout.NORTH);
 
         // 5. 버튼 패널 (West) - Y축으로 쌓는 BoxLayout 사용
         JPanel buttonPanel = new JPanel();
         buttonPanel.setLayout(new BoxLayout(buttonPanel, BoxLayout.Y_AXIS));
+        buttonPanel.setOpaque(false);
 
         // 6. 버튼 생성
         createRoomButton = new JButton("게임 생성하기");
         findRoomButton = new JButton("방 찾기");
-        settingsButton = new JButton("설정");
 
         // 7. 버튼 크기 및 스타일 설정
         Dimension buttonSize = new Dimension(150, 40);
@@ -53,10 +63,7 @@ public class LobbyPanel extends JPanel {
         findRoomButton.setPreferredSize(buttonSize);
         findRoomButton.setMaximumSize(buttonSize);
         findRoomButton.setFont(buttonFont);
-        
-        settingsButton.setPreferredSize(buttonSize);
-        settingsButton.setMaximumSize(buttonSize);
-        settingsButton.setFont(buttonFont);
+
 
         // 8. 버튼 패널에 컴포넌트 추가
         buttonPanel.add(Box.createVerticalGlue()); 
@@ -65,13 +72,11 @@ public class LobbyPanel extends JPanel {
         buttonPanel.add(Box.createRigidArea(new Dimension(0, 10)));
         buttonPanel.add(findRoomButton);
         buttonPanel.add(Box.createRigidArea(new Dimension(0, 10)));
-        buttonPanel.add(settingsButton);
 
         // 9. 버튼 정렬 (왼쪽 정렬)
         createRoomButton.setAlignmentX(Component.LEFT_ALIGNMENT);
         findRoomButton.setAlignmentX(Component.LEFT_ALIGNMENT);
-        settingsButton.setAlignmentX(Component.LEFT_ALIGNMENT);
-        
+
         // 10. 전체 LobbyPanel의 WEST (왼쪽) 영역에 버튼 패널 추가
         this.add(buttonPanel, BorderLayout.WEST);
 
@@ -117,13 +122,14 @@ public class LobbyPanel extends JPanel {
 //                }
             }
         });
-        
-        // "설정" 버튼
-        settingsButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                System.out.println("설정 클릭 (기능 미구현)");
-            }
-        });
+    }
+    // 배경 그리기
+    @Override
+    protected void paintComponent(Graphics g) {
+        super.paintComponent(g);
+        // 이미지가 로드되었다면 화면에 꽉 차게 그림
+        if (backgroundImage != null) {
+            g.drawImage(backgroundImage, 0, 0, getWidth(), getHeight(), this);
+        }
     }
 }

@@ -28,7 +28,7 @@ public class LoginPanel extends JPanel {
 
         // 배경 이미지 로드
         try {
-            ImageIcon icon = new ImageIcon(getClass().getResource("/resources/images/night-village.jpg"));
+            ImageIcon icon = new ImageIcon(getClass().getResource("/resources/images/backgrounds/bg_login.png"));
             backgroundImage = icon.getImage();
         } catch (Exception e) {
             System.err.println("배경 이미지를 찾을 수 없습니다.");
