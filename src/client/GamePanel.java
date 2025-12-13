@@ -262,6 +262,11 @@ public class GamePanel extends JPanel {
                     continue;
                 }
 
+                // 자기 자신은 버튼 생성에서 제외
+                if (nickname.equals(mainFrame.getNickname())) {
+                    continue;
+                }
+
                 JButton playerBtn = new JButton(nickname);
                 playerBtn.setFont(UIManager.getFont("defaultFont").deriveFont(Font.BOLD, (float) 16));
 
@@ -720,15 +725,9 @@ public class GamePanel extends JPanel {
         // 2. UI 텍스트 초기화
         chatArea.setText("");
         chatField.setText("");
-        if (phaseLabel != null) {
-            phaseLabel.setText("게임 대기 중");
-        }
-        if (timerLabel != null) {
-            timerLabel.setText("-");
-        }
-        if (survivorCountLabel != null) {
-            survivorCountLabel.setText("생존자: 0명");
-        }
+        if (phaseLabel != null) { phaseLabel.setText("게임 대기 중");}
+        if (timerLabel != null) { timerLabel.setText("-"); }
+        if (survivorCountLabel != null) { survivorCountLabel.setText("생존자: 0명"); }
 
         // 3. 콤보박스 초기화 (전체 채팅으로 복구)
         if (chatModeCombo != null) {
@@ -744,12 +743,8 @@ public class GamePanel extends JPanel {
         setTargetSelectionEnabled(false);
 
         // 5. 버튼 패널 비우기
-        if (playerGridPanel != null) {
-            playerGridPanel.removeAll();
-        }
-        if (targetSelectionPanel != null) {
-            targetSelectionPanel.removeAll();
-        }
+        if (playerGridPanel != null) { playerGridPanel.removeAll(); }
+        if (targetSelectionPanel != null) { targetSelectionPanel.removeAll(); }
 
         revalidate();
         repaint();
