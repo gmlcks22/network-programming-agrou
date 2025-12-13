@@ -77,18 +77,46 @@ public class GamePanel extends JPanel {
         ROLE_DESCRIPTIONS.put("큐피드", "첫날 밤 두 명을 연인으로 지정합니다. 한 명이 죽으면 다른 한 명도 함께 죽습니다.");
     }
 
+    // 배경 이미지 관리용 필드
+    private Image backgroundImage;
+    private Map<String, Image> phaseBackgrounds = new HashMap<>();
+
     public GamePanel(MainFrame mainFrame) {
         this.mainFrame = mainFrame;
         setLayout(new BorderLayout());
+
+        loadBackgroundImages();
 
         initTopPanel();
         initCenterPanel();
         initBottomPanel();
     }
 
+    // 이미지 로딩 메소드
+    private void loadBackgroundImages() {
+        phaseBackgrounds.put("DAY_DISCUSSION", loadUserInfoImage("src/resources/images/backgrounds/bg_day.png"));
+        phaseBackgrounds.put("DAY_VOTE", loadUserInfoImage("src/resources/images/backgrounds/bg_vote.png"));
+        phaseBackgrounds.put("NIGHT_ACTION", loadUserInfoImage("src/resources/images/backgrounds/bg_night.png"));
+        phaseBackgrounds.put("HUNTER_REVENGE", loadUserInfoImage("src/resources/images/backgrounds/bg_hunter.png"));
+
+        // 기본값
+        backgroundImage = phaseBackgrounds.get("DAY_DISCUSSION");
+    }
+
+    // ★ 배경 그리기 메소드
+    @Override
+    protected void paintComponent(Graphics g) {
+        super.paintComponent(g);
+        if (backgroundImage != null) {
+            // 화면 크기에 맞춰 꽉 차게
+            g.drawImage(backgroundImage, 0, 0, getWidth(), getHeight(), this);
+        }
+    }
+
     // 1. 상단 패널: 직업도감(좌) + 타이머/단계(중) + 생존자(우)
     private void initTopPanel() {
         JPanel topPanel = new JPanel(new BorderLayout());
+        topPanel.setOpaque(false);
         topPanel.setBorder(BorderFactory.createEmptyBorder(5, 10, 5, 10));
         topPanel.setPreferredSize(new Dimension(0, 85));
 
@@ -97,6 +125,7 @@ public class GamePanel extends JPanel {
         roleBookPanel.setOpaque(false);
 
         JScrollPane roleScrollPane = new JScrollPane(roleBookPanel);
+        roleScrollPane.setOpaque(false);
         roleScrollPane.setBorder(BorderFactory.createEmptyBorder(0, 0, 0, 20));
         roleScrollPane.getViewport().setOpaque(false);
         roleScrollPane.setOpaque(false);
@@ -161,17 +190,39 @@ public class GamePanel extends JPanel {
     // 3. 하단 패널: 채팅(좌) + 플레이어 선택(중)
     private void initBottomPanel() {
         JPanel bottomPanel = new JPanel(new BorderLayout());
+        bottomPanel.setOpaque(false);
         bottomPanel.setPreferredSize(new Dimension(0, 300)); // 높이 300px 고정
 
-        // 3-1. [좌측] 채팅창 (기존 로직 유지)
-        JPanel chatPanel = new JPanel(new BorderLayout());
-        chatPanel.setBorder(BorderFactory.createTitledBorder("채팅"));
+        // 3-1. [좌측] 채팅창
+        JPanel chatPanel = new SemiTransparentPanel(new BorderLayout());
+        chatPanel.setBorder(BorderFactory.createTitledBorder(
+                BorderFactory.createEtchedBorder(), "채팅",
+                TitledBorder.DEFAULT_JUSTIFICATION, TitledBorder.DEFAULT_POSITION,
+                UIManager.getFont("defaultFont").deriveFont(Font.BOLD, 14f),
+                Color.white
+        ));
         chatPanel.setPreferredSize(new Dimension(300, 0));
 
-        chatArea = new JTextArea();
+        chatArea = new JTextArea() {
+            @Override
+            protected void paintComponent(Graphics g) {
+                // 반두명 객체 그리기
+                Graphics2D g2 = (Graphics2D) g.create();
+                g2.setColor(new Color(0, 0, 0, 120));
+                g2.fillRect(0, 0, getWidth(), getHeight());
+                g2.dispose();
+                super.paintComponent(g);   // 글씨 그리기
+            }
+        };
+        chatArea.setOpaque(false);
         chatArea.setEditable(false);
         chatArea.setLineWrap(true);
+        chatArea.setFont(UIManager.getFont("defaultFont").deriveFont(Font.PLAIN, 14f));
+        chatArea.setForeground(Color.white);
+
         chatScrollPane = new JScrollPane(chatArea);
+        chatScrollPane.setOpaque(false);
+        chatScrollPane.getViewport().setOpaque(false);
         chatPanel.add(chatScrollPane, BorderLayout.CENTER);
 
         JPanel inputPanel = new JPanel(new BorderLayout());
@@ -181,12 +232,30 @@ public class GamePanel extends JPanel {
         chatModeCombo.setPreferredSize(new Dimension(70, 25));
         chatModeCombo.setVisible(false);
 
-        chatField = new JTextField();
+        chatField = new JTextField() {
+            @Override
+            protected void paintComponent(Graphics g) {
+                // 반두명 객체 그리기
+                Graphics2D g2 = (Graphics2D) g.create();
+                g2.setColor(new Color(0, 0, 0, 120));
+                g2.fillRect(0, 0, getWidth(), getHeight());
+                g2.dispose();
+
+                // 글씨 그리기
+                super.paintComponent(g);
+            }
+        };
+        chatField.setOpaque(false);
+        chatField.setForeground(Color.white);
+        chatField.setFont(UIManager.getFont("defaultFont").deriveFont(Font.PLAIN, 14f));
         chatField.addActionListener(e -> sendChatMessage());
+
         chatSendButton = new JButton("전송");
+        chatSendButton.setFont(UIManager.getFont("defaultFont").deriveFont(Font.BOLD, 12f));
         chatSendButton.addActionListener(e -> sendChatMessage());
 
         JPanel leftInput = new JPanel(new BorderLayout());
+        leftInput.setOpaque(false);
         leftInput.add(chatModeCombo, BorderLayout.WEST);
         leftInput.add(chatField, BorderLayout.CENTER);
 
@@ -196,29 +265,28 @@ public class GamePanel extends JPanel {
         chatPanel.add(inputPanel, BorderLayout.SOUTH);
         bottomPanel.add(chatPanel, BorderLayout.WEST);
 
-        // 3-2. [중앙] 플레이어 선택 패널 (높이 줄임 + 중앙 정렬)
+        // 3-2. [중앙] 플레이어 선택 패널
         JPanel centerWrapper = new JPanel(new GridBagLayout());
         centerWrapper.setOpaque(false);
-        centerWrapper.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
+        //centerWrapper.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
 
-        playerGridPanel = new JPanel(new GridLayout(0, 4, 10, 10)); // 4열 그리드
+        playerGridPanel = new SemiTransparentPanel(new GridLayout(0, 4, 10, 10)); // 4열 그리드
 
         TitledBorder gridBorder = BorderFactory.createTitledBorder(
-                BorderFactory.createLineBorder(Color.BLUE, 2),
+                BorderFactory.createLineBorder(Color.GRAY, 2),
                 "대상 선택",
                 TitledBorder.CENTER, TitledBorder.TOP,
-                UIManager.getFont("defaultFont").deriveFont(Font.BOLD, (float)14), Color.BLUE
+                UIManager.getFont("defaultFont").deriveFont(Font.BOLD, (float)14), Color.WHITE
         );
         playerGridPanel.setBorder(gridBorder);
 
-        // GridBagConstraints: 수직으로 늘어나지 않게 설정
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.gridx = 0;
         gbc.gridy = 0;
         gbc.weightx = 1.0;
-        gbc.weighty = 0.0; // 높이 고정 (여백으로 채움)
+        gbc.weighty = 1.0;
         gbc.fill = GridBagConstraints.HORIZONTAL;
-        gbc.anchor = GridBagConstraints.CENTER;
+        gbc.anchor = GridBagConstraints.SOUTH;  //  바닥에 붙임
 
         centerWrapper.add(playerGridPanel, gbc);
         bottomPanel.add(centerWrapper, BorderLayout.CENTER);
@@ -274,16 +342,16 @@ public class GamePanel extends JPanel {
                 if (nickname.equals(mainFrame.getNickname())) continue;
 
                 JButton playerBtn = new JButton(nickname);
-                playerBtn.setFont(UIManager.getFont("defaultFont").deriveFont(Font.BOLD, (float)14));
-                playerBtn.setPreferredSize(new Dimension(80, 50));
+                playerBtn.setFont(UIManager.getFont("defaultFont").deriveFont(Font.BOLD, (float)10));
+                playerBtn.setPreferredSize(new Dimension(80, 40));
                 playerBtn.setFocusPainted(false);
 
                 if (deadPlayers.contains(nickname)) {
-                    playerBtn.setForeground(Color.DARK_GRAY);
+                    playerBtn.setForeground(Color.decode("#3f4143"));
+                    playerBtn.setBackground(Color.decode("#292b2c"));
                     playerBtn.setEnabled(false);
-                    playerBtn.setText(nickname + " (사망)");
+                    playerBtn.setText("<html><strike>" + nickname + "</strike></html>");
                 } else {
-                    playerBtn.setForeground(Color.BLACK);
                     playerBtn.setEnabled(true);
                 }
 
@@ -303,14 +371,21 @@ public class GamePanel extends JPanel {
             String nickname = entry.getKey();
             JButton btn = entry.getValue();
 
+            // 사망자 명단에 있는 경우 (Dead)
             if (deadPlayers.contains(nickname)) {
                 btn.setEnabled(false);
-                btn.setForeground(Color.DARK_GRAY);
-                if (!btn.getText().contains("(사망)")) {
-                    btn.setText(nickname + " (사망)");
-                }
+                // updateUserList와 동일한 스타일 적용 (취소선, 색상)
+                btn.setForeground(Color.decode("#3f4143"));
+                btn.setBackground(Color.decode("#292b2c"));
+                btn.setText("<html><strike>" + nickname + "</strike></html>");
+            }
+            // 생존자인 경우 (Alive) - 혹시 모를 상태 복구를 위해 else 추가
+            else {
+                btn.setEnabled(true);
+                btn.setText(nickname);
             }
         }
+        playerGridPanel.revalidate(); // 레이아웃 변경 가능성 대비
         playerGridPanel.repaint();
     }
 
@@ -480,6 +555,12 @@ public class GamePanel extends JPanel {
         this.remainingSeconds = duration;
         this.maxSeconds = duration;
 
+        // 단계에 맞는 배경 이미지로 교체
+        if (phaseBackgrounds.containsKey(phase)) {
+            this.backgroundImage = phaseBackgrounds.get(phase);
+            repaint(); // 화면 다시 그리기 요청
+        }
+
         // Progress Bar 초기화
         if (timerProgressBar != null) {
             timerProgressBar.setMaximum(duration);
@@ -624,6 +705,39 @@ public class GamePanel extends JPanel {
             return new ImageIcon(newImg);
         }
         return null;
+    }
+
+    // 배경 이미지 로드 헬퍼
+    private Image loadUserInfoImage(String path) {
+        String resourcePath = path.replace("src", "");
+        java.net.URL imgURL = getClass().getResource(resourcePath);
+        if (imgURL != null) {
+            return new ImageIcon(imgURL).getImage();
+        } else {
+            System.err.println("배경 이미지를 찾을 수 없음: " + resourcePath);
+            return null;
+        }
+    }
+
+    // 반투명 배경을 가진 패널 클래스(JPanel 대체하여 사용)
+    private class SemiTransparentPanel extends JPanel {
+        private Color backgroundColor;
+
+        public SemiTransparentPanel(LayoutManager layout) {
+            super(layout);
+            setOpaque(false);
+            //this.backgroundColor = new Color(255, 255, 255, 150); // 흰색 반투명
+            this.backgroundColor = new Color(0, 0, 0, 150); // 검은색 반투명
+        }
+
+        @Override
+        protected void paintComponent(Graphics g) {
+            Graphics2D g2 = (Graphics2D) g.create();
+            g2.setColor(backgroundColor);
+            g2.fillRect(0, 0, getWidth(), getHeight()); // 반투명 사각형 그림
+            g2.dispose();
+            super.paintComponent(g);
+        }
     }
 
     public void reset() {
