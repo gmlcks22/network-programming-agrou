@@ -160,8 +160,8 @@ public class CreateGamePanel extends JPanel {
         roleGridPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
 
         // 역할 데이터
-        String[] roleNames = {"경비병", "늑대인간", "독재자", "마녀", "사냥꾼", "선견자", "시민", "천사", "큐피드"};
-        String[] roleImages = {"경비병.png", "늑대인간.png", "독재자.png", "마녀.png", "사냥꾼.png", "선견자.png", "시민.png", "천사.png", "큐피드.png"};
+        String[] roleNames = {"경비병", "늑대인간", "독재자", "사냥꾼", "선견자", "시민", "천사", "큐피드"};
+        String[] roleImages = {"경비병.png", "늑대인간.png", "독재자.png", "사냥꾼.png", "선견자.png", "시민.png", "천사.png", "큐피드.png"};
 
         for (int i = 0; i < roleNames.length; i++) {
             String roleName = roleNames[i];

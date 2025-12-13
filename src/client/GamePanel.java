@@ -71,9 +71,8 @@ public class GamePanel extends JPanel {
         ROLE_DESCRIPTIONS.put("늑대인간", "마피아 진영입니다. 매일 밤 동료들과 상의하여 한 명의 시민을 살해할 수 있습니다.");
         ROLE_DESCRIPTIONS.put("경비병", "매일 밤 자신을 포함한 한 명을 선택하여 늑대인간의 공격으로부터 보호합니다.");
         ROLE_DESCRIPTIONS.put("선견자", "매일 밤 한 명을 선택하여 그 사람의 직업을 알아낼 수 있습니다.");
-        ROLE_DESCRIPTIONS.put("마녀", "당신은 일회용 물약 2가지, 치료 물약과 독 물약을 사용할 수 있습니다.");
         ROLE_DESCRIPTIONS.put("사냥꾼", "자신이 사망할 때, 유언으로 다른 한 명을 지목하여 함께 데려갈 수 있습니다.");
-        ROLE_DESCRIPTIONS.put("독재자", "투표 시간에 능력을 사용하여 혼자서 처형 대상을 결정할 수 있습니다. (1회)");
+        ROLE_DESCRIPTIONS.put("독재자", "밤 능력을 사용하여 혼자서 처형 대상을 결정할 수 있습니다. (1회) 처형 대상이 늑대라면 살아남고, 시민이라면 자신 또한 사망합니다.");
         ROLE_DESCRIPTIONS.put("천사", "첫날 낮 투표에서 처형당하면 즉시 게임에서 승리합니다.");
         ROLE_DESCRIPTIONS.put("큐피드", "첫날 밤 두 명을 연인으로 지정합니다. 한 명이 죽으면 다른 한 명도 함께 죽습니다.");
     }

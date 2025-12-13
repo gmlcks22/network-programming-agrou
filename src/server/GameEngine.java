@@ -327,8 +327,6 @@ public class GameEngine {
                 return new AngelRole();
             case "독재자":
                 return new DictatorRole();
-            case "마녀":
-                return new CitizenRole("마녀");
             default:
                 return new CitizenRole();
         }
