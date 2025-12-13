@@ -97,11 +97,11 @@ public class GamePanel extends JPanel {
         roleBookPanel.setOpaque(false);
 
         JScrollPane roleScrollPane = new JScrollPane(roleBookPanel);
-        roleScrollPane.setBorder(null);
+        roleScrollPane.setBorder(BorderFactory.createEmptyBorder(0, 0, 0, 20));
         roleScrollPane.getViewport().setOpaque(false);
         roleScrollPane.setOpaque(false);
         roleScrollPane.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_NEVER);
-        roleScrollPane.setPreferredSize(new Dimension(350, 110)); // 너비 제한
+        roleScrollPane.setPreferredSize(new Dimension(250, 85)); // 너비 제한
 
         topPanel.add(roleScrollPane, BorderLayout.WEST);
 
@@ -118,7 +118,7 @@ public class GamePanel extends JPanel {
         timerProgressBar.setStringPainted(true); // 바 안에 N초 텍스트 표시
         timerProgressBar.setFont(UIManager.getFont("defaultFont").deriveFont(Font.BOLD, 12f));
         timerProgressBar.setForeground(new Color(100, 200, 100)); // 초기 초록색
-        timerProgressBar.setBackground(Color.WHITE);
+        timerProgressBar.setBackground(Color.decode("#323236"));
         timerProgressBar.setUI(new javax.swing.plaf.basic.BasicProgressBarUI() {
             protected Color getSelectionBackground() { return Color.WHITE; } // 바가 없는 곳의 글자 색
             protected Color getSelectionForeground() { return Color.WHITE; } // 바가 채워진 곳의 글자 색
@@ -136,6 +136,7 @@ public class GamePanel extends JPanel {
         JPanel rightPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
         rightPanel.setOpaque(false);
         rightPanel.add(survivorCountLabel);
+        rightPanel.setPreferredSize(new Dimension(250, 85));
         topPanel.add(rightPanel, BorderLayout.EAST);
 
         add(topPanel, BorderLayout.NORTH);
