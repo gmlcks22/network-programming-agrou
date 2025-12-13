@@ -13,34 +13,32 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import javax.swing.*;
+import javax.swing.border.TitledBorder;
 
 public class GamePanel extends JPanel {
 
     private MainFrame mainFrame;
 
-    // UI 컴포넌트
-    private JLabel myRoleImageLabel;
-    private JLabel myRoleNameLabel;
-    private JLabel survivorCountLabel;
-
+    // --- 상단 (Top) UI ---
+    private JPanel roleBookPanel;   // 직업 도감 (상단 이동)
     private JLabel phaseLabel;
     private JLabel timerLabel;
+    private JLabel survivorCountLabel;
+    private JLabel myRoleNameLabel; // 내 직업 텍스트 (상단 도감 옆이나 별도 표시는 공간상 생략 또는 도감 강조로 대체 가능, 여기선 도감 강조로 대체)
 
-    private JPanel centerDisplayPanel;
-    private JLabel roleDescriptionLabel;
+    // --- 중앙 (Center) UI ---
+    private JPanel centerInfoPanel; // 안내 문구 표시
 
+    // --- 하단 (Bottom) UI ---
     private JTextArea chatArea;
     private JTextField chatField;
     private JButton chatSendButton;
     private JComboBox<String> chatModeCombo;
-
     private JScrollPane chatScrollPane;
-    private JPanel roleBookPanel;
 
-    private JPanel targetSelectionPanel;
-    private JPanel playerGridPanel; // 중앙 플레이어 버튼 그리드
+    private JPanel playerGridPanel; // 플레이어 선택 패널 (하단 중앙 이동)
 
-    // 데이터
+    // --- 데이터 및 상태 관리 ---
     private String myRoleName = "시민";
     private String myFaction = "Citizen";
     private int survivorCount = 0;
@@ -49,24 +47,30 @@ public class GamePanel extends JPanel {
     private Timer clientTimer;
     private int remainingSeconds = 0;
 
+    // 플레이어 버튼 관리 (닉네임 -> 버튼)
+    private Map<String, JButton> playerButtons = new HashMap<>();
+    // 직업 도감 라벨 관리 (직업명 -> 라벨, 테두리 표시용)
+    private Map<String, JLabel> roleBookLabels = new HashMap<>();
+
     // 사망자 관리 및 내 상태
-    private Set<String> deadPlayers = new HashSet<>(); // 사망자 목록
-    private boolean amIDead = false; // 내가 죽었는지 여부
+    private Set<String> deadPlayers = new HashSet<>();
+    private boolean amIDead = false;
 
     // 큐피드
-    private boolean isLover = false; // 내가 연인인지 여부
-    private Set<String> cupidTargets = new HashSet<>(); // 큐피드용 타겟 저장소
+    private boolean isLover = false;
+    private Set<String> cupidTargets = new HashSet<>();
+
     // 사냥꾼 발포 모드 여부
     private boolean isHunterMode = false;
-    // 직업 설명 데이터 (기존 유지)
-    private static final Map<String, String> ROLE_DESCRIPTIONS = new HashMap<>();
 
+    // 직업 설명 데이터
+    private static final Map<String, String> ROLE_DESCRIPTIONS = new HashMap<>();
     static {
         ROLE_DESCRIPTIONS.put("시민", "아무런 능력이 없습니다. 낮 동안의 토론과 투표를 통해 마피아를 찾아내야 합니다.");
         ROLE_DESCRIPTIONS.put("늑대인간", "마피아 진영입니다. 매일 밤 동료들과 상의하여 한 명의 시민을 살해할 수 있습니다.");
         ROLE_DESCRIPTIONS.put("경비병", "매일 밤 자신을 포함한 한 명을 선택하여 늑대인간의 공격으로부터 보호합니다.");
         ROLE_DESCRIPTIONS.put("선견자", "매일 밤 한 명을 선택하여 그 사람의 직업을 알아낼 수 있습니다.");
-        ROLE_DESCRIPTIONS.put("마녀", "당신은 일회용 물약 2가지, 치료 물약과 독 물약을 가지고 시작합니다. 치료 물약은 사람을 사망으로부터 지켜낼 수 있고, 독 물약은 사람을 죽입니다.");
+        ROLE_DESCRIPTIONS.put("마녀", "당신은 일회용 물약 2가지, 치료 물약과 독 물약을 사용할 수 있습니다.");
         ROLE_DESCRIPTIONS.put("사냥꾼", "자신이 사망할 때, 유언으로 다른 한 명을 지목하여 함께 데려갈 수 있습니다.");
         ROLE_DESCRIPTIONS.put("독재자", "투표 시간에 능력을 사용하여 혼자서 처형 대상을 결정할 수 있습니다. (1회)");
         ROLE_DESCRIPTIONS.put("천사", "첫날 낮 투표에서 처형당하면 즉시 게임에서 승리합니다.");
@@ -79,98 +83,84 @@ public class GamePanel extends JPanel {
 
         initTopPanel();
         initCenterPanel();
-        initRightPanel();
+        // initRightPanel(); // 우측 패널(기존 대상선택) 제거
         initBottomPanel();
     }
 
+    // 1. 상단 패널: 직업도감(좌) + 타이머/단계(중) + 생존자(우)
     private void initTopPanel() {
         JPanel topPanel = new JPanel(new BorderLayout());
-        topPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+        topPanel.setBorder(BorderFactory.createEmptyBorder(5, 10, 5, 10));
+        topPanel.setPreferredSize(new Dimension(0, 120)); // 높이 확보
 
-        // 1. 좌측 (WEST)
-        JPanel myRolePanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        myRolePanel.setOpaque(false);
-        myRoleImageLabel = new JLabel();
-        myRoleImageLabel.setPreferredSize(new Dimension(50, 50));
-        myRoleImageLabel.setBorder(BorderFactory.createLineBorder(Color.GRAY));
-        myRoleNameLabel = new JLabel("직업: " + myRoleName);
-        myRoleNameLabel.setFont(UIManager.getFont("defaultFont").deriveFont(Font.BOLD, (float) 16));
-        myRoleNameLabel.setBorder(BorderFactory.createEmptyBorder(0, 10, 0, 0));
-        myRolePanel.add(myRoleImageLabel);
-        myRolePanel.add(myRoleNameLabel);
-        topPanel.add(myRolePanel, BorderLayout.WEST);
+        // [좌측] 직업 도감
+        roleBookPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 5, 0));
+        roleBookPanel.setOpaque(false);
 
-        // 2. 중앙 (CENTER)
+        JScrollPane roleScrollPane = new JScrollPane(roleBookPanel);
+        roleScrollPane.setBorder(null);
+        roleScrollPane.getViewport().setOpaque(false);
+        roleScrollPane.setOpaque(false);
+        roleScrollPane.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_NEVER);
+        roleScrollPane.setPreferredSize(new Dimension(350, 110)); // 너비 제한
+
+        topPanel.add(roleScrollPane, BorderLayout.WEST);
+
+        // [중앙] 타이머 및 단계
         JPanel statusPanel = new JPanel(new GridLayout(2, 1));
         statusPanel.setOpaque(false);
+
         phaseLabel = new JLabel("게임 대기 중");
         phaseLabel.setFont(UIManager.getFont("defaultFont").deriveFont(Font.BOLD, (float) 18));
         phaseLabel.setHorizontalAlignment(SwingConstants.CENTER);
+
         timerLabel = new JLabel("-");
-        timerLabel.setFont(UIManager.getFont("defaultFont").deriveFont(Font.BOLD, (float) 22));
+        timerLabel.setFont(UIManager.getFont("defaultFont").deriveFont(Font.BOLD, (float) 24));
         timerLabel.setForeground(new Color(200, 50, 50));
         timerLabel.setHorizontalAlignment(SwingConstants.CENTER);
+
         statusPanel.add(phaseLabel);
         statusPanel.add(timerLabel);
         topPanel.add(statusPanel, BorderLayout.CENTER);
 
-        // 3. 우측 (EAST)
-        survivorCountLabel = new JLabel("생존자: " + survivorCount + "명");
-        survivorCountLabel.setFont(UIManager.getFont("defaultFont").deriveFont(Font.BOLD, (float) 20));
-        JPanel rightInfoPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
-        rightInfoPanel.setOpaque(false);
-        rightInfoPanel.add(survivorCountLabel);
-        topPanel.add(rightInfoPanel, BorderLayout.EAST);
+        // [우측] 생존자 수
+        survivorCountLabel = new JLabel("생존자: - 명");
+        survivorCountLabel.setFont(UIManager.getFont("defaultFont").deriveFont(Font.BOLD, (float)16));
+
+        JPanel rightPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+        rightPanel.setOpaque(false);
+        rightPanel.add(survivorCountLabel);
+        topPanel.add(rightPanel, BorderLayout.EAST);
 
         add(topPanel, BorderLayout.NORTH);
     }
 
+    // 2. 중앙 패널: 단순 정보 표시 (카드 레이아웃 제거)
     private void initCenterPanel() {
-        centerDisplayPanel = new JPanel(new CardLayout());
-        centerDisplayPanel.setOpaque(false);
-        centerDisplayPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
+        centerInfoPanel = new JPanel(new BorderLayout());
+        centerInfoPanel.setOpaque(false);
+        centerInfoPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
 
-        // 플레이어 그리드
-        playerGridPanel = new JPanel(new GridLayout(0, 4, 15, 15));
-        playerGridPanel.setOpaque(false);
-        centerDisplayPanel.add(playerGridPanel, "DEFAULT");
+        JLabel infoLabel = new JLabel("<html><div style='text-align: center; color: gray;'>" +
+                "<h1>Wolf Mafia</h1>" +
+                "<p>상단 왼쪽의 도감을 클릭하여 직업 설명을 확인하세요.<br>" +
+                "하단에서 대상을 선택하여 투표하거나 능력을 사용하세요.</p></div></html>");
+        infoLabel.setHorizontalAlignment(SwingConstants.CENTER);
 
-        // 설명 패널
-        JPanel descriptionPanel = new JPanel(new BorderLayout());
-        descriptionPanel.setBorder(BorderFactory.createTitledBorder("직업 설명"));
-        roleDescriptionLabel = new JLabel("직업 이미지를 클릭하면 설명이 여기에 표시됩니다.");
-        roleDescriptionLabel.setFont(UIManager.getFont("defaultFont").deriveFont(Font.PLAIN, (float) 16));
-        roleDescriptionLabel.setHorizontalAlignment(SwingConstants.CENTER);
-        descriptionPanel.add(roleDescriptionLabel, BorderLayout.CENTER);
-
-        JButton closeDescButton = new JButton("닫기");
-        closeDescButton.addActionListener(e -> showCenterCard("DEFAULT"));
-        JPanel closeBtnPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
-        closeBtnPanel.setOpaque(false);
-        closeBtnPanel.add(closeDescButton);
-        descriptionPanel.add(closeBtnPanel, BorderLayout.SOUTH);
-
-        centerDisplayPanel.add(descriptionPanel, "DESCRIPTION");
-        add(centerDisplayPanel, BorderLayout.CENTER);
+        centerInfoPanel.add(infoLabel, BorderLayout.CENTER);
+        add(centerInfoPanel, BorderLayout.CENTER);
     }
 
-    private void initRightPanel() {
-        targetSelectionPanel = new JPanel();
-        targetSelectionPanel.setLayout(new BoxLayout(targetSelectionPanel, BoxLayout.Y_AXIS));
-        targetSelectionPanel.setBorder(BorderFactory.createTitledBorder("대상 선택"));
-        targetSelectionPanel.setPreferredSize(new Dimension(180, 0));
-        setTargetSelectionEnabled(false);
-        add(targetSelectionPanel, BorderLayout.EAST);
-    }
-
+    // 3. 하단 패널: 채팅(좌) + 플레이어 선택(중)
     private void initBottomPanel() {
         JPanel bottomPanel = new JPanel(new BorderLayout());
-        bottomPanel.setPreferredSize(new Dimension(0, 300));
+        bottomPanel.setPreferredSize(new Dimension(0, 300)); // 높이 300px 고정
 
-        // 채팅 패널
+        // 3-1. [좌측] 채팅창 (기존 로직 유지)
         JPanel chatPanel = new JPanel(new BorderLayout());
         chatPanel.setBorder(BorderFactory.createTitledBorder("채팅"));
-        chatPanel.setPreferredSize(new Dimension(280, 0));
+        chatPanel.setPreferredSize(new Dimension(300, 0));
+
         chatArea = new JTextArea();
         chatArea.setEditable(false);
         chatArea.setLineWrap(true);
@@ -192,433 +182,374 @@ public class GamePanel extends JPanel {
         JPanel leftInput = new JPanel(new BorderLayout());
         leftInput.add(chatModeCombo, BorderLayout.WEST);
         leftInput.add(chatField, BorderLayout.CENTER);
+
         inputPanel.add(leftInput, BorderLayout.CENTER);
         inputPanel.add(chatSendButton, BorderLayout.EAST);
+
         chatPanel.add(inputPanel, BorderLayout.SOUTH);
         bottomPanel.add(chatPanel, BorderLayout.WEST);
 
-        // 도감 패널
-        roleBookPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 15, 10));
-        roleBookPanel.setBorder(BorderFactory.createTitledBorder("직업 도감"));
-        JScrollPane bookScrollPane = new JScrollPane(roleBookPanel);
-        bookScrollPane.setBorder(null);
-        bottomPanel.add(bookScrollPane, BorderLayout.CENTER);
+        // 3-2. [중앙] 플레이어 선택 패널 (높이 줄임 + 중앙 정렬)
+        JPanel centerWrapper = new JPanel(new GridBagLayout());
+        centerWrapper.setOpaque(false);
+        centerWrapper.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
+
+        playerGridPanel = new JPanel(new GridLayout(0, 4, 10, 10)); // 4열 그리드
+
+        TitledBorder gridBorder = BorderFactory.createTitledBorder(
+                BorderFactory.createLineBorder(Color.BLUE, 2),
+                "대상 선택",
+                TitledBorder.CENTER, TitledBorder.TOP,
+                UIManager.getFont("defaultFont").deriveFont(Font.BOLD, (float)14), Color.BLUE
+        );
+        playerGridPanel.setBorder(gridBorder);
+
+        // GridBagConstraints: 수직으로 늘어나지 않게 설정
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+        gbc.weightx = 1.0;
+        gbc.weighty = 0.0; // 높이 고정 (여백으로 채움)
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.anchor = GridBagConstraints.CENTER;
+
+        centerWrapper.add(playerGridPanel, gbc);
+        bottomPanel.add(centerWrapper, BorderLayout.CENTER);
 
         add(bottomPanel, BorderLayout.SOUTH);
     }
 
     // ================== [기능 구현] ==================
-    //  플레이어 사망 처리 (MainFrame에서 호출)
+
+    // 1. 플레이어 사망 처리
     public void handlePlayerDeath(String deadNickname) {
-        // 1. 사망자 목록에 추가
         deadPlayers.add(deadNickname);
 
-        // 2. 생존자 수 감소
         if (survivorCount > 0) {
             survivorCount--;
             survivorCountLabel.setText("생존자: " + survivorCount + "명");
         }
 
-        // 3. 내가 죽었는지 확인
         if (mainFrame.getNickname().equals(deadNickname)) {
             amIDead = true;
             appendMessage("[System] 당신은 사망하여 관전자 상태가 되었습니다.");
-            // 죽으면 모든 행동 불가 처리
             setTargetSelectionEnabled(false);
             setChatEnabled(true);
 
             chatModeCombo.removeAllItems();
             chatModeCombo.addItem("유령");
             chatModeCombo.setSelectedItem("유령");
-            chatModeCombo.setVisible(true); // 콤보박스 보이게
-            chatModeCombo.setEnabled(false); // 변경 불가능하게 고정
+            chatModeCombo.setVisible(true);
+            chatModeCombo.setEnabled(false);
         }
 
-        // 4. UI 갱신 (사망자 회색 처리)
         refreshPlayerGrid();
     }
 
-    // 플레이어 목록 갱신 (사망자 상태 반영)
+    // 2. 유저 목록 업데이트 (버튼 생성 - 자기 자신 제외)
     public void updateUserList(String[] users) {
-        // 초기 생존자 수 설정 (게임 시작 시 한 번만 호출됨을 가정, 혹은 리셋 로직 필요)
-        // 여기서는 users 배열 길이 - deadPlayers 크기로 계산
         int currentSurvivors = 0;
         for (String u : users) {
-            if (!deadPlayers.contains(u)) {
-                currentSurvivors++;
-            }
+            if (!deadPlayers.contains(u)) currentSurvivors++;
         }
         this.survivorCount = currentSurvivors;
         if (survivorCountLabel != null) {
             survivorCountLabel.setText("생존자: " + survivorCount + "명");
         }
 
-        // 중앙 패널 버튼 다시 그리기
         if (playerGridPanel != null) {
             playerGridPanel.removeAll();
+            playerButtons.clear();
 
             for (String nickname : users) {
-                if (nickname.isEmpty()) {
-                    continue;
-                }
-
-                // 자기 자신은 버튼 생성에서 제외
-                if (nickname.equals(mainFrame.getNickname())) {
-                    continue;
-                }
+                if (nickname.isEmpty()) continue;
+                // 자기 자신 버튼 생성 제외
+                if (nickname.equals(mainFrame.getNickname())) continue;
 
                 JButton playerBtn = new JButton(nickname);
-                playerBtn.setFont(UIManager.getFont("defaultFont").deriveFont(Font.BOLD, (float) 16));
+                playerBtn.setFont(UIManager.getFont("defaultFont").deriveFont(Font.BOLD, (float)14));
+                playerBtn.setPreferredSize(new Dimension(80, 50));
+                playerBtn.setFocusPainted(false);
 
-                // 사망 여부에 따른 스타일 분기
                 if (deadPlayers.contains(nickname)) {
                     playerBtn.setForeground(Color.DARK_GRAY);
-                    playerBtn.setEnabled(false); // 클릭 불가
+                    playerBtn.setEnabled(false);
                     playerBtn.setText(nickname + " (사망)");
                 } else {
                     playerBtn.setForeground(Color.BLACK);
                     playerBtn.setEnabled(true);
                 }
 
-                playerBtn.setPreferredSize(new Dimension(100, 100));
-                playerBtn.setFocusPainted(false);
                 playerBtn.addActionListener(e -> handlePlayerClick(nickname));
 
+                playerButtons.put(nickname, playerBtn);
                 playerGridPanel.add(playerBtn);
             }
             playerGridPanel.revalidate();
             playerGridPanel.repaint();
         }
-
-        // 우측 타겟 패널도 갱신
-        targetSelectionPanel.removeAll();
-        for (String user : users) {
-            JButton playerBtn = new JButton(user);
-            playerBtn.setAlignmentX(Component.CENTER_ALIGNMENT);
-            playerBtn.setMaximumSize(new Dimension(160, 40));
-
-            // 사망자는 타겟 목록에서도 비활성화
-            if (deadPlayers.contains(user)) {
-                playerBtn.setEnabled(false);
-                playerBtn.setText(user + " (사망)");
-            } else {
-                playerBtn.addActionListener(e -> handlePlayerClick(user)); // 클릭 핸들러 통일
-            }
-
-            targetSelectionPanel.add(playerBtn);
-            targetSelectionPanel.add(Box.createRigidArea(new Dimension(0, 5)));
-        }
-        targetSelectionPanel.revalidate();
-        targetSelectionPanel.repaint();
     }
 
-    // 사망 상태 반영을 위한 그리드 리프레시 (updateUserList 재활용)
+    // 사망자 상태 갱신 (맵 이용)
     private void refreshPlayerGrid() {
-        // MainFrame이나 어딘가에 저장된 전체 유저 리스트가 필요하지만, 
-        // 일단 UI 컴포넌트에서 텍스트를 추출해서 다시 그리거나,
-        // 간단하게는 버튼들의 상태만 변경할 수도 있습니다.
-        // 여기서는 버튼들을 순회하며 상태만 바꿉니다.
+        for (Map.Entry<String, JButton> entry : playerButtons.entrySet()) {
+            String nickname = entry.getKey();
+            JButton btn = entry.getValue();
 
-        // 중앙 그리드
-        for (Component comp : playerGridPanel.getComponents()) {
-            if (comp instanceof JButton) {
-                JButton btn = (JButton) comp;
-                // 버튼 텍스트에서 닉네임 추출 ( "(사망)"이 안 붙은 상태라고 가정)
-                String text = btn.getText();
-                String nickname = text.replace(" (사망)", "");
-
-                if (deadPlayers.contains(nickname)) {
-                    btn.setEnabled(false);
+            if (deadPlayers.contains(nickname)) {
+                btn.setEnabled(false);
+                btn.setForeground(Color.DARK_GRAY);
+                if (!btn.getText().contains("(사망)")) {
                     btn.setText(nickname + " (사망)");
                 }
             }
         }
-
-        // 우측 타겟 패널
-        for (Component comp : targetSelectionPanel.getComponents()) {
-            if (comp instanceof JButton) {
-                JButton btn = (JButton) comp;
-                String text = btn.getText();
-                String nickname = text.replace(" (사망)", "");
-
-                if (deadPlayers.contains(nickname)) {
-                    btn.setEnabled(false);
-                    btn.setText(nickname + " (사망)");
-                }
-            }
-        }
-
         playerGridPanel.repaint();
-        targetSelectionPanel.repaint();
     }
 
-    // 플레이어 버튼 클릭 시 처리
+    // 3. 직업 도감 업데이트 (상단 표시, 팝업, 테두리 강조)
+    public void updateRoleBook(String[] roles) {
+        roleBookPanel.removeAll();
+        roleBookLabels.clear();
+
+        Set<String> uniqueRoles = new HashSet<>();
+        for (String role : roles) uniqueRoles.add(role.trim());
+
+        for (String roleName : uniqueRoles) {
+            String imagePath = "src/resources/images/" + roleName + ".png";
+            ImageIcon icon = loadScaledImage(imagePath, 40, 60);
+
+            JLabel roleLabel = new JLabel();
+            if (icon != null) {
+                roleLabel.setIcon(icon);
+            } else {
+                roleLabel.setText(roleName);
+                roleLabel.setPreferredSize(new Dimension(40, 60));
+                roleLabel.setHorizontalAlignment(SwingConstants.CENTER);
+            }
+
+            roleLabel.setToolTipText(roleName);
+            roleLabel.setBorder(BorderFactory.createLineBorder(Color.LIGHT_GRAY, 1));
+            roleLabel.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+
+            // 클릭 시 팝업
+            roleLabel.addMouseListener(new MouseAdapter() {
+                @Override
+                public void mouseClicked(MouseEvent e) {
+                    showRolePopup(roleName);
+                }
+            });
+
+            roleBookLabels.put(roleName, roleLabel);
+            roleBookPanel.add(roleLabel);
+        }
+        roleBookPanel.revalidate();
+        roleBookPanel.repaint();
+
+        highlightMyRole(); // 도감 갱신 후 내 직업 테두리 적용
+    }
+
+    // 내 직업 빨간 테두리 강조
+    private void highlightMyRole() {
+        for (JLabel lbl : roleBookLabels.values()) {
+            lbl.setBorder(BorderFactory.createLineBorder(Color.LIGHT_GRAY, 1));
+        }
+        JLabel myLabel = roleBookLabels.get(myRoleName);
+        if (myLabel != null) {
+            myLabel.setBorder(BorderFactory.createLineBorder(Color.RED, 3));
+        }
+    }
+
+    // 직업 설명 팝업
+    private void showRolePopup(String roleName) {
+        String description = ROLE_DESCRIPTIONS.getOrDefault(roleName, "설명이 없습니다.");
+        JOptionPane.showMessageDialog(this,
+                "<html><body style='width: 200px;'><h2>" + roleName + "</h2><p>" + description + "</p></body></html>",
+                "직업 설명", JOptionPane.INFORMATION_MESSAGE);
+    }
+
+    // 4. 내 직업 설정
+    public void setMyRole(String roleName, String faction) {
+        this.myRoleName = roleName;
+        this.myFaction = faction;
+
+        highlightMyRole(); // 직업 설정 시 테두리 강조
+
+        chatModeCombo.removeAllItems();
+        chatModeCombo.addItem("전체");
+
+        if ("Mafia".equals(faction)) {
+            chatModeCombo.addItem("마피아");
+            chatModeCombo.setVisible(true);
+        } else {
+            chatModeCombo.setVisible(false);
+        }
+    }
+
+    // 5. 버튼 클릭 핸들러 (기존 로직 유지)
     private void handlePlayerClick(String targetName) {
-        // 1. 사냥꾼 모드일 때
         if (isHunterMode) {
             int confirm = JOptionPane.showConfirmDialog(this,
-                    "정말 '" + targetName + "' 님을 쏘시겠습니까?",
-                    "최후의 한 발", JOptionPane.YES_NO_OPTION);
-
+                    "정말 '" + targetName + "' 님을 쏘시겠습니까?", "최후의 한 발", JOptionPane.YES_NO_OPTION);
             if (confirm == JOptionPane.YES_OPTION) {
-                try {
-                    if (mainFrame.getSocket() != null) {
-                        PrintWriter out = new PrintWriter(mainFrame.getSocket().getOutputStream(), true);
-                        out.println(Protocol.CMD_HUNTER_SHOT + " " + targetName);
-
-                        // 발포 후 모드 해제 및 다시 비활성화
-                        isHunterMode = false;
-                        setTargetSelectionEnabled(false);
-                        appendMessage("[System] 발포했습니다.");
-                    }
-                } catch (IOException ex) {
-                    ex.printStackTrace();
-                }
+                sendAction(Protocol.CMD_HUNTER_SHOT + " " + targetName);
+                isHunterMode = false;
+                setTargetSelectionEnabled(false);
+                appendMessage("[System] 발포했습니다.");
             }
-            return; // 여기서 종료
+            return;
         }
 
-        // 2. 일반적인 사망자 (행동 불가)        
         if (amIDead) {
             JOptionPane.showMessageDialog(this, "사망자는 행동할 수 없습니다.");
             return;
         }
 
-        try {
-            if (mainFrame.getSocket() == null) {
+        if ("DAY_VOTE".equals(currentPhase)) {
+            if ("독재자".equals(myRoleName)) {
+                Object[] options = {"투표하기", "쿠데타(능력사용)", "취소"};
+                int choice = JOptionPane.showOptionDialog(this,
+                        "'" + targetName + "' 님에게 무엇을 하시겠습니까?", "독재자 능력",
+                        JOptionPane.YES_NO_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE,
+                        null, options, options[0]);
+                if (choice == 0) {
+                    sendAction(Protocol.CMD_VOTE + " " + targetName);
+                    appendMessage("[System] '" + targetName + "' 님에게 투표했습니다.");
+                } else if (choice == 1) {
+                    sendAction(Protocol.CMD_DICTATOR_COUP + " " + targetName);
+                }
+            } else {
+                sendAction(Protocol.CMD_VOTE + " " + targetName);
+                appendMessage("[System] '" + targetName + "' 님에게 투표했습니다.");
+            }
+        } else if ("NIGHT_ACTION".equals(currentPhase)) {
+            if (myRoleName.equals("큐피드")) {
+                handleCupidClick(targetName);
+            } else {
+                sendAction(Protocol.CMD_NIGHT_ACTION + " " + targetName);
+                // 밤 행동은 비밀이므로 시스템 메시지 출력 안 함 (혹은 서버 응답 의존)
+            }
+        }
+    }
+
+    private void handleCupidClick(String targetName) {
+        if (cupidTargets.contains(targetName)) {
+            cupidTargets.remove(targetName);
+            appendMessage("[시스템] 선택 취소: " + targetName);
+        } else {
+            if (cupidTargets.size() >= 2) {
+                JOptionPane.showMessageDialog(this, "두 명까지만 선택할 수 있습니다.");
                 return;
             }
-            PrintWriter out = new PrintWriter(mainFrame.getSocket().getOutputStream(), true);
+            cupidTargets.add(targetName);
+            appendMessage("[시스템] 선택: " + targetName);
+        }
 
-            if ("DAY_VOTE".equals(currentPhase)) {
+        if (cupidTargets.size() == 2) {
+            int confirm = JOptionPane.showConfirmDialog(this,
+                    cupidTargets.toString() + " 연인으로 맺으시겠습니까?", "큐피드", JOptionPane.YES_NO_OPTION);
+            if (confirm == JOptionPane.YES_OPTION) {
+                String[] t = cupidTargets.toArray(new String[0]);
+                sendAction(Protocol.CMD_NIGHT_ACTION + " " + t[0] + " " + t[1]);
+                cupidTargets.clear();
+            }
+        }
+    }
 
-                // 독재자일 경우 선택지 제공
-                if ("독재자".equals(myRoleName)) {
-                    Object[] options = {"투표하기", "쿠데타(능력사용)", "취소"};
-                    int choice = JOptionPane.showOptionDialog(this,
-                            "'" + targetName + "' 님에게 무엇을 하시겠습니까?\n(쿠데타는 게임 중 1번만 가능하며, 즉시 처형합니다.)",
-                            "독재자 능력 선택",
-                            JOptionPane.YES_NO_CANCEL_OPTION,
-                            JOptionPane.QUESTION_MESSAGE,
-                            null,
-                            options,
-                            options[0]);
-
-                    if (choice == 0) { // 투표하기
-                        out.println(Protocol.CMD_VOTE + " " + targetName);
-                        appendMessage("[System] '" + targetName + "' 님에게 투표했습니다.");
-                    } else if (choice == 1) { // 쿠데타
-                        out.println(Protocol.CMD_DICTATOR_COUP + " " + targetName);
-                    }
-                } // 일반 유저는 그냥 투표
-                else {
-                    out.println(Protocol.CMD_VOTE + " " + targetName);
-                    appendMessage("[System] '" + targetName + "' 님에게 투표했습니다.");
-                }
-            } else if ("NIGHT_ACTION".equals(currentPhase)) {
-
-                if (myRoleName.equals("큐피드")) {
-                    if (cupidTargets.contains(targetName)) {
-                        cupidTargets.remove(targetName); // 선택 해제
-                        appendMessage("[시스템] 선택 취소: " + targetName);
-                    } else {
-                        if (cupidTargets.size() >= 2) {
-                            JOptionPane.showMessageDialog(this, "두 명까지만 선택할 수 있습니다. 먼저 선택을 해제하세요.");
-                            return;
-                        }
-                        cupidTargets.add(targetName);
-                        appendMessage("[시스템] 선택: " + targetName);
-                    }
-
-                    // 2명이 다 선택되었으면 전송 여부 묻기
-                    if (cupidTargets.size() == 2) {
-                        int confirm = JOptionPane.showConfirmDialog(this,
-                                cupidTargets.toString() + " 두 분을 연인으로 맺어주시겠습니까?",
-                                "큐피드 능력 사용", JOptionPane.YES_NO_OPTION);
-
-                        if (confirm == JOptionPane.YES_OPTION) {
-                            String[] t = cupidTargets.toArray(new String[0]);
-                            out.println(Protocol.CMD_NIGHT_ACTION + " " + t[0] + " " + t[1]);
-                            cupidTargets.clear(); // 초기화
-                        }
-                    }
-                } else {
-                    // 다른 직업은 1명 선택 (기존 로직)
-                    out.println(Protocol.CMD_NIGHT_ACTION + " " + targetName);
-                }
+    private void sendAction(String message) {
+        try {
+            if (mainFrame.getSocket() != null) {
+                PrintWriter out = new PrintWriter(mainFrame.getSocket().getOutputStream(), true);
+                out.println(message);
             }
         } catch (IOException ex) {
             ex.printStackTrace();
         }
     }
 
+    // 6. 단계 업데이트
     public void updatePhase(String phase, int duration) {
         this.currentPhase = phase;
         this.remainingSeconds = duration;
-
         boolean canChat = true;
 
         if (phase.equals("DAY_DISCUSSION")) {
             phaseLabel.setText("☀ 낮 (토론)");
             phaseLabel.setForeground(new Color(0, 100, 200));
             setTargetSelectionEnabled(false);
-            appendMessage("[System] 토론 시간입니다. 자유롭게 대화하세요.");
-            canChat = true;
-            if (chatModeCombo.isVisible()) {
-                chatModeCombo.setSelectedItem("전체");
-            }
+            appendMessage("[System] 토론 시간입니다.");
+            if (chatModeCombo.isVisible()) chatModeCombo.setSelectedItem("전체");
         } else if (phase.equals("DAY_VOTE")) {
             phaseLabel.setText("🗳 낮 (투표)");
             phaseLabel.setForeground(new Color(200, 50, 0));
             setTargetSelectionEnabled(true);
-            appendMessage("[System] 투표 시간입니다. 처형할 대상을 선택하세요.");
-            canChat = true;
+            appendMessage("[System] 투표 시간입니다.");
         } else if (phase.equals("HUNTER_REVENGE")) {
             phaseLabel.setText("☠️ 사냥꾼의 복수");
             phaseLabel.setForeground(Color.RED);
-
-            // 모두 채팅 가능 (살려달라고 빌어야 함)
-            canChat = true;
-            if (chatModeCombo.isVisible()) {
-                chatModeCombo.setSelectedItem("전체");
-            }
-
-            if (myRoleName.equals("사냥꾼") && amIDead) {
-                // 나는 죽은 사냥꾼이다 -> 타겟 선택 활성화
-                setTargetSelectionEnabled(true);
-                appendMessage("[System] 당신은 죽었습니다. 제한시간 내에 길동무를 선택하세요!");
-            } else {
-                // 다른 사람들은 선택 불가
-                setTargetSelectionEnabled(false);
-                appendMessage("[System] 사냥꾼이 총을 겨누고 있습니다! 채팅으로 설득하세요.");
-            }
+            setTargetSelectionEnabled(myRoleName.equals("사냥꾼") && amIDead);
+            appendMessage("[System] 사냥꾼이 총을 겨누고 있습니다!");
         } else if (phase.equals("NIGHT_ACTION")) {
             phaseLabel.setText("🌙 밤 (능력 사용)");
             phaseLabel.setForeground(new Color(0, 0, 100));
-
-            if ("Mafia".equals(myFaction)) {
-                canChat = true;
+            canChat = "Mafia".equals(myFaction);
+            if(canChat) {
                 chatModeCombo.setSelectedItem("마피아");
-                appendMessage("[System] 마피아들과 은밀하게 대화할 수 있습니다.");
+                appendMessage("[System] 마피아 채팅이 활성화되었습니다.");
             } else {
-                canChat = false;
-                appendMessage("[System] 밤이 되었습니다. (채팅 불가)");
+                appendMessage("[System] 밤이 되었습니다.");
             }
-
-            if (myRoleName.equals("시민")) {
-                setTargetSelectionEnabled(false);
-            } else {
-                setTargetSelectionEnabled(true);
-            }
+            setTargetSelectionEnabled(!myRoleName.equals("시민"));
         }
 
-        // 내가 죽었으면 채팅, 행동 모두 강제 비활성화
         if (amIDead) {
-            canChat = false; // 기본적으로 죽으면 채팅 불가 (유령챗 제외)
-            setTargetSelectionEnabled(false);
-
-            // 사냥꾼 페이즈이고 내가 사냥꾼이면 타겟 선택은 가능해야 함
-            if (phase.equals("HUNTER_REVENGE") && myRoleName.equals("사냥꾼")) {
-                setTargetSelectionEnabled(true);
-            }
+            canChat = false;
+            setTargetSelectionEnabled(phase.equals("HUNTER_REVENGE") && myRoleName.equals("사냥꾼"));
         }
 
         setChatEnabled(canChat);
 
-        if (clientTimer != null) {
-            clientTimer.stop();
-        }
+        if (clientTimer != null) clientTimer.stop();
         timerLabel.setText(remainingSeconds + "초");
-
-        clientTimer = new Timer(1000, new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                remainingSeconds--;
-                if (remainingSeconds >= 0) {
-                    timerLabel.setText(remainingSeconds + "초");
-                } else {
-                    ((Timer) e.getSource()).stop();
-                }
-            }
+        clientTimer = new Timer(1000, e -> {
+            remainingSeconds--;
+            if (remainingSeconds >= 0) timerLabel.setText(remainingSeconds + "초");
+            else ((Timer)e.getSource()).stop();
         });
         clientTimer.start();
     }
 
-    private void setChatEnabled(boolean enabled) {
-        chatField.setEditable(enabled);
-        if (chatSendButton != null) {
-            chatSendButton.setEnabled(enabled);
-        }
-    }
-
-    public void updateRoleBook(String[] roles) {
-        roleBookPanel.removeAll();
-        Set<String> uniqueRoles = new HashSet<>();
-        for (String role : roles) {
-            uniqueRoles.add(role.trim());
-        }
-        for (String roleName : uniqueRoles) {
-            addRoleToBook(roleName);
-        }
-        roleBookPanel.revalidate();
-        roleBookPanel.repaint();
-    }
-
-    public void setMyRole(String roleName, String faction) {
-        this.myRoleName = roleName;
-        this.myFaction = faction;
-        myRoleNameLabel.setText("직업: " + myRoleName);
-
-        // 이미지 설정 (기존 코드)
-        ImageIcon icon = loadScaledImage("src/resources/images/" + roleName + ".png", 50, 50);
-        if (icon != null) {
-            myRoleImageLabel.setIcon(icon);
-        } else {
-            myRoleImageLabel.setText(roleName.substring(0, 1));
-        }
-
-        // 콤보박스 재설정
-        chatModeCombo.removeAllItems();
-        chatModeCombo.addItem("전체");
-
-        // 마피아 진영이면 '마피아' 채팅 추가
-        if ("Mafia".equals(faction)) {
-            chatModeCombo.addItem("마피아");
-            chatModeCombo.setVisible(true);
-        } else {
-            // 시민 등은 특수 채팅이 없으면 콤보박스 숨김 (기본값)
-            // 단, 나중에 연인이 되면 다시 보여줘야 함
-            chatModeCombo.setVisible(false);
-        }
-    }
-
-    // 사냥꾼 모드 활성화
-    public void enableHunterMode() {
-        this.isHunterMode = true;
-        // 죽었어도 타겟 선택 가능하게 잠시 활성화
-        setTargetSelectionEnabled(true);
-        JOptionPane.showMessageDialog(this,
-                "당신은 죽었습니다.\n하지만 사냥꾼의 능력으로 저승 길동무를 선택할 수 있습니다!",
-                "발포 기회", JOptionPane.WARNING_MESSAGE);
-
-        appendMessage("[System] 총을 쏠 대상을 선택하세요 (제한시간 없음)");
-    }
-
-    // 연인이 되었을 때 호출할 메소드
-    public void enableLoverChat() {
-        // 중복 방지 체크 후 추가
-        boolean hasLoverOption = false;
-        for (int i = 0; i < chatModeCombo.getItemCount(); i++) {
-            if ("연인".equals(chatModeCombo.getItemAt(i))) {
-                hasLoverOption = true;
-                break;
+    private void setTargetSelectionEnabled(boolean enabled) {
+        // 맵에 있는 모든 버튼 활성/비활성 제어 (사망자 제외)
+        for (Map.Entry<String, JButton> entry : playerButtons.entrySet()) {
+            if (!deadPlayers.contains(entry.getKey())) {
+                entry.getValue().setEnabled(enabled);
             }
         }
+    }
 
-        if (!hasLoverOption) {
+    private void setChatEnabled(boolean enabled) {
+        chatField.setEditable(enabled);
+        if (chatSendButton != null) chatSendButton.setEnabled(enabled);
+    }
+
+    // 유틸리티: 사냥꾼 모드
+    public void enableHunterMode() {
+        this.isHunterMode = true;
+        setTargetSelectionEnabled(true);
+        JOptionPane.showMessageDialog(this, "사냥꾼 능력 발동! 저승 길동무를 선택하세요.", "알림", JOptionPane.WARNING_MESSAGE);
+    }
+
+    // 유틸리티: 연인 채팅
+    public void enableLoverChat() {
+        boolean hasLover = false;
+        for (int i = 0; i < chatModeCombo.getItemCount(); i++) {
+            if ("연인".equals(chatModeCombo.getItemAt(i))) hasLover = true;
+        }
+        if (!hasLover) {
             chatModeCombo.addItem("연인");
-            chatModeCombo.setVisible(true); // 콤보박스 활성화
-            appendMessage("[System] 연인 채팅 채널이 활성화되었습니다.");
+            chatModeCombo.setVisible(true);
+            appendMessage("[System] 연인 채팅이 활성화되었습니다.");
         }
     }
 
@@ -636,64 +567,15 @@ public class GamePanel extends JPanel {
                     String mode = (String) chatModeCombo.getSelectedItem();
                     String cmd = Protocol.CMD_CHAT;
                     if (chatModeCombo.isVisible()) {
-                        if ("마피아".equals(mode)) {
-                            cmd = Protocol.CMD_MAFIA_CHAT;
-                        } else if ("유령".equals(mode)) {
-                            cmd = Protocol.CMD_DEAD_CHAT;
-                        } else if ("연인".equals(mode)) {
-                            cmd = Protocol.CMD_LOVER_CHAT;
-                        }
+                        if ("마피아".equals(mode)) cmd = Protocol.CMD_MAFIA_CHAT;
+                        else if ("유령".equals(mode)) cmd = Protocol.CMD_DEAD_CHAT;
+                        else if ("연인".equals(mode)) cmd = Protocol.CMD_LOVER_CHAT;
                     }
                     out.println(cmd + " " + msg);
                     chatField.setText("");
                 }
             } catch (IOException ex) {
                 ex.printStackTrace();
-            }
-        }
-    }
-
-    private void addRoleToBook(String roleName) {
-        String imagePath = "src/resources/images/" + roleName + ".png";
-        ImageIcon icon = loadScaledImage(imagePath, 60, 90);
-        JLabel roleLabel = new JLabel(roleName, SwingConstants.CENTER);
-        if (icon != null) {
-            roleLabel.setIcon(icon);
-            roleLabel.setText("");
-            roleLabel.setToolTipText(roleName);
-        } else {
-            roleLabel.setPreferredSize(new Dimension(60, 90));
-            roleLabel.setBorder(BorderFactory.createLineBorder(Color.LIGHT_GRAY));
-        }
-        roleLabel.setVerticalTextPosition(JLabel.BOTTOM);
-        roleLabel.setHorizontalTextPosition(JLabel.CENTER);
-        roleLabel.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
-        roleLabel.addMouseListener(new MouseAdapter() {
-            @Override
-            public void mouseClicked(MouseEvent e) {
-                showRoleDescription(roleName);
-            }
-        });
-        roleBookPanel.add(roleLabel);
-    }
-
-    private void showRoleDescription(String roleName) {
-        String description = ROLE_DESCRIPTIONS.getOrDefault(roleName, "설명이 없습니다.");
-        roleDescriptionLabel.setText("<html><body style='text-align: center; width: 300px;'>"
-                + "<h2>[" + roleName + "]</h2>"
-                + "<p>" + description + "</p></body></html>");
-        showCenterCard("DESCRIPTION");
-    }
-
-    private void showCenterCard(String cardName) {
-        CardLayout cl = (CardLayout) centerDisplayPanel.getLayout();
-        cl.show(centerDisplayPanel, cardName);
-    }
-
-    public void setTargetSelectionEnabled(boolean enabled) {
-        for (Component comp : targetSelectionPanel.getComponents()) {
-            if (comp instanceof JButton) {
-                comp.setEnabled(enabled);
             }
         }
     }
@@ -706,30 +588,26 @@ public class GamePanel extends JPanel {
             Image img = originalIcon.getImage();
             Image newImg = img.getScaledInstance(width, height, Image.SCALE_SMOOTH);
             return new ImageIcon(newImg);
-        } else {
-            return null;
         }
+        return null;
     }
 
-    // 게임 상태 초기화 메소드
     public void reset() {
-        // 1. 데이터 초기화
-        this.deadPlayers.clear();
-        this.amIDead = false;
-        this.currentPhase = "WAITING";
-        this.remainingSeconds = 0;
-        this.survivorCount = 0;
-        this.myRoleName = "시민";
-        this.myFaction = "Citizen";
+        deadPlayers.clear();
+        amIDead = false;
+        currentPhase = "WAITING";
+        remainingSeconds = 0;
+        survivorCount = 0;
+        myRoleName = "시민";
+        myFaction = "Citizen";
+        playerButtons.clear(); // 버튼 맵 초기화
 
-        // 2. UI 텍스트 초기화
         chatArea.setText("");
         chatField.setText("");
-        if (phaseLabel != null) { phaseLabel.setText("게임 대기 중");}
-        if (timerLabel != null) { timerLabel.setText("-"); }
-        if (survivorCountLabel != null) { survivorCountLabel.setText("생존자: 0명"); }
+        if (phaseLabel != null) phaseLabel.setText("게임 대기 중");
+        if (timerLabel != null) timerLabel.setText("-");
+        if (survivorCountLabel != null) survivorCountLabel.setText("생존자: 0명");
 
-        // 3. 콤보박스 초기화 (전체 채팅으로 복구)
         if (chatModeCombo != null) {
             chatModeCombo.removeAllItems();
             chatModeCombo.addItem("전체");
@@ -738,13 +616,9 @@ public class GamePanel extends JPanel {
             chatModeCombo.setEnabled(true);
         }
 
-        // 4. 입력창 활성화
         setChatEnabled(true);
-        setTargetSelectionEnabled(false);
-
-        // 5. 버튼 패널 비우기
-        if (playerGridPanel != null) { playerGridPanel.removeAll(); }
-        if (targetSelectionPanel != null) { targetSelectionPanel.removeAll(); }
+        if (playerGridPanel != null) playerGridPanel.removeAll();
+        if (roleBookPanel != null) roleBookPanel.removeAll(); // 도감도 초기화
 
         revalidate();
         repaint();
