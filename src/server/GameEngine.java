@@ -159,9 +159,38 @@ public class GameEngine {
         String wolfTarget = actions.get("늑대인간");
         String guardTarget = actions.get("경비병");
         String seerTarget = actions.get("선견자");
+        String dictatorTarget = actions.get("독재자");
 
         List<String> deathList = new ArrayList<>();
         List<String> nightMessages = new ArrayList<>(); // 메시지 버퍼
+
+        // 0. 독재자 쿠데타 처리 (가장 먼저 처리해야 함)
+        if (dictatorTarget != null) {
+            ClientHandler targetClient = findClientByNickname(dictatorTarget);
+            ClientHandler dictatorClient = findClientByRole("독재자"); // 헬퍼 메소드 필요
+
+            if (targetClient != null && dictatorClient != null && !dictatorClient.isDead()) {
+                nightMessages.add("========================================");
+                nightMessages.add("[속보] 독재자 '" + dictatorClient.getNickname() + "' 님이 쿠데타를 일으켰습니다!");
+
+                deathList.add(dictatorTarget);
+
+                // 대상이 늑대인간(Mafia)인지 확인
+                if ("Mafia".equals(targetClient.getRole().getFaction())) {
+                    // 성공: 늑대인간 처형 + 독재자는 시장(Mayor) 등극
+                    nightMessages.add("[성공] 처형된 '" + dictatorTarget + "' 님은 늑대인간이었습니다!");
+                    nightMessages.add("[알림] '" + dictatorClient.getNickname() + "' 님이 도시의 영웅(시장)이 되었습니다.");
+                } else {
+                    // 실패: 독재자 본인 처형
+                    nightMessages.add("[실패] '" + dictatorTarget + "' 님은 선량한 시민이었습니다.");
+                    nightMessages.add("[처형] 무고한 시민을 건드린 독재자 '" + dictatorClient.getNickname() + "' 님이 대신 처형당합니다.");
+
+                    // 독재자 사망 목록 추가
+                    deathList.add(dictatorClient.getNickname());
+                }
+                nightMessages.add("========================================");
+            }
+        }
 
         // 1. 늑대/경비병 결과 계산
         if (wolfTarget != null) {
@@ -222,6 +251,16 @@ public class GameEngine {
             // 밤에 사냥꾼이 죽으면 즉시 복수 페이즈로 전환 (낮 타이머 취소됨)
             startPhase(GamePhase.HUNTER_REVENGE);
         }
+    }
+
+    // 역할 이름으로 생존한 클라이언트 찾기
+    private ClientHandler findClientByRole(String roleName) {
+        for (ClientHandler c : room.getClientsInRoom()) {
+            if (!c.isDead() && roleName.equals(c.getRoleName())) {
+                return c;
+            }
+        }
+        return null;
     }
 
     public void triggerDictatorCoup(String dictatorName, String targetName) {
