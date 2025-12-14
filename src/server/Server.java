@@ -10,7 +10,6 @@ public class Server {
     public static final RoomManager ROOM_MANAGER = new RoomManager();
 
     // 현재 접속한 모든 클라이언트 핸들러를 관리하는 리스트
-    // (Vector는 동기화가 되어 있어 멀티스레드 환경에서 비교적 안전함)
     private static Vector<ClientHandler> allClients = new Vector<>();
 
     public static void main(String[] args) {

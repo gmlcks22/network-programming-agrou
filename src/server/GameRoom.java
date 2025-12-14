@@ -279,7 +279,6 @@ public class GameRoom {
     // 1. 투표 행사 (ClientHandler가 호출)
     public synchronized void castVote(ClientHandler voter, String targetNickname) {
         // 게임 중이 아니거나 밤이면 투표 불가
-        // (더 정교하게 하려면 GamePhase를 GameRoom도 알고 있어야 하지만, 일단 밤 여부로 체크)
         if (isNight) {
             voter.sendMessage("[System] 지금은 투표할 수 없습니다.");
             return;
@@ -299,7 +298,7 @@ public class GameRoom {
         // 투표 기록 (누가 누구를 찍었는지)
         dayVotes.put(voter.getNickname(), targetNickname);
 
-        // (선택 사항) 투표 실명제: 누가 누구를 찍었는지 모두에게 알림
+        // 투표 실명제: 누가 누구를 찍었는지 모두에게 알림
         broadcastMessage("[투표] '" + voter.getNickname() + "' 님이 '" + targetNickname + "' 님에게 투표했습니다.");
     }
 
@@ -363,17 +362,10 @@ public class GameRoom {
 
     // 독재자 쿠데타 요청 (ClientHandler -> GameRoom -> GameEngine)
     public void dictatorCoup(ClientHandler dictator, String targetName) {
-        // 여기서도 페이즈 체크를 한 번 더 하면 좋음
-        // (GameEngine이 private이라 직접 페이즈 체크가 어려우면 생략 가능하지만 안전장치 권장)
-
         gameEngine.triggerDictatorCoup(dictator.getNickname(), targetName);
     }
 
     // 3. 유저 사망 처리
-    public boolean killUser(String targetNickname) {
-        return killUser(targetNickname, "GENERAL");
-    }
-
     public boolean killUser(String targetNickname, String cause) {
         ClientHandler victim = findClientByNickname(targetNickname);
 
@@ -452,7 +444,7 @@ public class GameRoom {
         }
     }
 
-    // 승리 조건 판단 (연인 승리 추가)
+    // 승리 조건 판단
     public boolean checkWinCondition() {
         int aliveCount = 0;
         int wolfCount = 0;

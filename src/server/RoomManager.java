@@ -46,7 +46,7 @@ public class RoomManager {
         return false;
     }
 
-    // [추가] 방 삭제 메소드
+    // 방 삭제 메소드
     public synchronized void removeRoom(GameRoom room) {
         gameRooms.remove(room);
         System.out.println("[Server] 방 삭제됨: " + room.getRoomName());
