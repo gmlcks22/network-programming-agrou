@@ -10,7 +10,7 @@ public class RoomManager {
 
     public RoomManager() {
         this.gameRooms = new CopyOnWriteArrayList<>();
-        gameRooms.add(new GameRoom("기본방 (101호)", "늑대인간,경비병,선견자,시민"));
+        //gameRooms.add(new GameRoom("기본방 (101호)", "늑대인간,경비병,선견자,시민"));
     }
 
     public synchronized void createRoom(String roomName, String customRoleConfig, ClientHandler creator) {
